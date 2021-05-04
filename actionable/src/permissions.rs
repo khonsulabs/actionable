@@ -29,20 +29,16 @@ impl Permissions {
                 let remaining_resource = &resource_name[1..resource_name.len()];
                 // Check if there are entries for this resource segment.
                 if let Some(permissions) = children.get(resource) {
-                    println!("Checking allowed in {:?}", resource);
                     if permissions.allowed_to(remaining_resource, action) {
-                        return dbg!(true);
+                        return true;
                     }
-                    println!("Nope");
                 }
 
                 // Check if there are entries for `Any`.
                 if let Some(permissions) = children.get(&Identifier::Any) {
-                    println!("Checking allowed in Any");
                     if permissions.allowed_to(remaining_resource, action) {
-                        return dbg!(true);
+                        return true;
                     }
-                    println!("Nope");
                 }
             }
         }
@@ -55,21 +51,19 @@ impl Permissions {
         // negative), we we can return.
         let mut allowed = &self.allowed;
         for name in action.name().0 {
-            println!("checking permissions for {:?} in {:?}", name, allowed);
             allowed = match allowed {
-                AllowedActions::None => return dbg!(false),
-                AllowedActions::All => return dbg!(true),
+                AllowedActions::None => return false,
+                AllowedActions::All => return true,
                 AllowedActions::Some(actions) => {
                     if let Some(children_allowed) = actions.get(name.as_ref()) {
                         children_allowed
                     } else {
-                        println!("Didn't find child: {:?}", name);
                         return false;
                     }
                 }
             };
         }
-        dbg!(matches!(allowed, AllowedActions::All))
+        matches!(allowed, AllowedActions::All)
     }
 }
 

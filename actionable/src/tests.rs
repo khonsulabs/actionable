@@ -2,7 +2,12 @@
 
 use std::borrow::Cow;
 
-use crate::{Action, ActionName, ActionNameList, Actionable, Permissions, ResourceName, Statement};
+use crate::{
+    Action, ActionName, ActionNameList, Actionable, PermissionDenied, Permissions, ResourceName,
+    Statement,
+};
+
+use crate as actionable; // TODO the Action derive doesn't accept this customization
 
 #[derive(Debug, Action)]
 enum TestActions {
@@ -75,33 +80,29 @@ fn basics() {
     ));
 }
 
-use crate as actionable;
-
 #[derive(Actionable, Debug)]
+#[actionable(actionable = "crate")]
 enum Request {
+    #[actionable(protection = "none")]
     UnprotectedNoParameters,
+    #[actionable(protection = "none")]
     UnprotectedEnumParameter(u64),
-    UnprotectedStructParameter {
-        value: u64,
-    },
+    #[actionable(protection = "none")]
+    UnprotectedStructParameter { value: u64 },
 
     #[actionable(protection = "simple")]
     SimplyProtectedNoParameters,
     #[actionable(protection = "simple")]
-    SimplyPotectedEnumParameter(u64),
+    SimplyProtectedEnumParameter(u64),
     #[actionable(protection = "simple")]
-    SimplyPotectedStructParameter {
-        value: u64,
-    },
+    SimplyProtectedStructParameter { value: u64 },
 
     #[actionable(protection = "custom")]
     CustomProtectedNoParameters,
     #[actionable(protection = "custom")]
     CustomProtectedEnumParameter(u64),
     #[actionable(protection = "custom")]
-    CustomProtectedStructParameter {
-        value: String,
-    },
+    CustomProtectedStructParameter { value: u64 },
     // #[actionable(subaction)]
     // Custom(YourType)
 }
@@ -115,28 +116,36 @@ struct Dispatcher;
 
 #[async_trait::async_trait]
 impl RequestDispatcher for Dispatcher {
-    type Output = ();
-    type Error = anyhow::Error;
+    type Output = Option<u64>;
+    type Error = TestError;
 
     type UnprotectedNoParametersHandler = Self;
     type UnprotectedEnumParameterHandler = Self;
     type UnprotectedStructParameterHandler = Self;
 
     type SimplyProtectedNoParametersHandler = Self;
-    type SimplyPotectedEnumParameterHandler = Self;
-    type SimplyPotectedStructParameterHandler = Self;
+    type SimplyProtectedEnumParameterHandler = Self;
+    type SimplyProtectedStructParameterHandler = Self;
 
     type CustomProtectedNoParametersHandler = Self;
     type CustomProtectedEnumParameterHandler = Self;
     type CustomProtectedStructParameterHandler = Self;
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum TestError {
+    #[error("custom error")]
+    CustomError,
+    #[error("permission error: {0}")]
+    PermissionDenied(#[from] PermissionDenied),
+}
+
 #[async_trait::async_trait]
 impl UnprotectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher, arg1: u64) -> Result<(), anyhow::Error> {
-        todo!()
+    async fn handle(dispatcher: &Self::Dispatcher, arg1: u64) -> Result<Option<u64>, TestError> {
+        Ok(Some(arg1))
     }
 }
 
@@ -144,8 +153,8 @@ impl UnprotectedEnumParameterHandler for Dispatcher {
 impl UnprotectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher, value: u64) -> Result<(), anyhow::Error> {
-        todo!()
+    async fn handle(dispatcher: &Self::Dispatcher, value: u64) -> Result<Option<u64>, TestError> {
+        Ok(Some(value))
     }
 }
 
@@ -153,18 +162,18 @@ impl UnprotectedStructParameterHandler for Dispatcher {
 impl UnprotectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
-        todo!()
+    async fn handle(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+        Ok(None)
     }
 }
 
 #[async_trait::async_trait]
-impl SimplyPotectedEnumParameterHandler for Dispatcher {
+impl SimplyProtectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
     fn resource_name(arg1: &u64) -> ResourceName {
-        todo!()
+        ResourceName::named(*arg1)
     }
 
     fn action() -> Self::Action {
@@ -174,18 +183,18 @@ impl SimplyPotectedEnumParameterHandler for Dispatcher {
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         arg1: u64,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(arg1))
     }
 }
 
 #[async_trait::async_trait]
-impl SimplyPotectedStructParameterHandler for Dispatcher {
+impl SimplyProtectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
     fn resource_name(arg1: &u64) -> ResourceName {
-        todo!()
+        ResourceName::named(*arg1)
     }
 
     fn action() -> Self::Action {
@@ -195,8 +204,8 @@ impl SimplyPotectedStructParameterHandler for Dispatcher {
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         value: u64,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(value))
     }
 }
 
@@ -206,15 +215,15 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
     type Action = TestActions;
 
     fn resource_name() -> ResourceName {
-        todo!()
+        ResourceName::named(0)
     }
 
     fn action() -> Self::Action {
         TestActions::DoSomething
     }
 
-    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
-        todo!()
+    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+        Ok(None)
     }
 }
 
@@ -222,12 +231,19 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
 impl CustomProtectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
 
-    fn is_allowed(permissions: &Permissions) -> bool {
-        todo!()
+    async fn verify_permissions(
+        _dispatcher: &Self,
+        permissions: &Permissions,
+    ) -> Result<(), TestError> {
+        if permissions.allowed_to(&ResourceName::named(0), &TestActions::DoSomething) {
+            Ok(())
+        } else {
+            Err(TestError::CustomError)
+        }
     }
 
-    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
-        todo!()
+    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+        Ok(None)
     }
 }
 
@@ -235,15 +251,23 @@ impl CustomProtectedNoParametersHandler for Dispatcher {
 impl CustomProtectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    fn is_allowed(permissions: &Permissions, arg1: &u64) -> bool {
-        todo!()
+    async fn verify_permissions(
+        _dispatcher: &Self,
+        permissions: &Permissions,
+        arg1: &u64,
+    ) -> Result<(), TestError> {
+        if permissions.allowed_to(&ResourceName::named(*arg1), &TestActions::DoSomething) {
+            Ok(())
+        } else {
+            Err(TestError::CustomError)
+        }
     }
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         arg1: u64,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(arg1))
     }
 }
 
@@ -251,25 +275,138 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
 impl CustomProtectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    fn is_allowed(permissions: &Permissions, arg1: &String) -> bool {
-        todo!()
+    async fn verify_permissions(
+        _dispatcher: &Self,
+        permissions: &Permissions,
+        arg1: &u64,
+    ) -> Result<(), TestError> {
+        if permissions.allowed_to(&ResourceName::named(*arg1), &TestActions::DoSomething) {
+            Ok(())
+        } else {
+            Err(TestError::CustomError)
+        }
     }
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
-        value: String,
-    ) -> Result<(), anyhow::Error> {
-        todo!()
+        value: u64,
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(value))
     }
 }
 
+#[tokio::test]
 async fn example() {
+    let permissions = Permissions::from(vec![Statement {
+        resources: vec![ResourceName::named(42)],
+        actions: ActionNameList::All,
+        allowed: true,
+    }]);
     let dispatcher = Dispatcher;
-    dispatcher
-        .act(
-            Request::SimplyPotectedEnumParameter(1),
-            &Permissions::default(),
-        )
-        .await
-        .unwrap()
+
+    // All success (permitted) cases
+    assert_eq!(
+        dispatcher
+            .dispatch(Request::UnprotectedEnumParameter(42), &permissions,)
+            .await
+            .unwrap(),
+        Some(42)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(
+                Request::UnprotectedStructParameter { value: 42 },
+                &permissions,
+            )
+            .await
+            .unwrap(),
+        Some(42)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(Request::UnprotectedNoParameters, &permissions,)
+            .await
+            .unwrap(),
+        None
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(Request::SimplyProtectedEnumParameter(42), &permissions,)
+            .await
+            .unwrap(),
+        Some(42)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(
+                Request::SimplyProtectedStructParameter { value: 42 },
+                &permissions,
+            )
+            .await
+            .unwrap(),
+        Some(42)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(Request::CustomProtectedEnumParameter(42), &permissions,)
+            .await
+            .unwrap(),
+        Some(42)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(
+                Request::CustomProtectedStructParameter { value: 42 },
+                &permissions,
+            )
+            .await
+            .unwrap(),
+        Some(42)
+    );
+
+    // Permission denied errors
+    assert!(matches!(
+        dispatcher
+            .dispatch(Request::SimplyProtectedNoParameters, &permissions,)
+            .await,
+        Err(TestError::PermissionDenied(_))
+    ));
+    assert!(matches!(
+        dispatcher
+            .dispatch(Request::SimplyProtectedEnumParameter(1), &permissions,)
+            .await,
+        Err(TestError::PermissionDenied(_))
+    ));
+    assert!(matches!(
+        dispatcher
+            .dispatch(
+                Request::SimplyProtectedStructParameter { value: 1 },
+                &permissions,
+            )
+            .await,
+        Err(TestError::PermissionDenied(_))
+    ));
+
+    // Custom errors
+    assert!(matches!(
+        dispatcher
+            .dispatch(Request::CustomProtectedNoParameters, &permissions,)
+            .await,
+        Err(TestError::CustomError)
+    ));
+    assert!(matches!(
+        dispatcher
+            .dispatch(Request::CustomProtectedEnumParameter(1), &permissions,)
+            .await,
+        Err(TestError::CustomError)
+    ));
+    assert!(matches!(
+        dispatcher
+            .dispatch(
+                Request::CustomProtectedStructParameter { value: 1 },
+                &permissions,
+            )
+            .await,
+        Err(TestError::CustomError)
+    ));
 }

@@ -12,7 +12,7 @@
 #![cfg_attr(doc, deny(rustdoc))]
 
 use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
+use proc_macro_error::{emit_error, proc_macro_error};
 use syn::{parse_macro_input, DeriveInput};
 
 mod action;
@@ -31,5 +31,11 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Actionable, attributes(actionable))]
 pub fn actionable_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    actionable::derive(&input).unwrap().into()
+    match actionable::derive(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(err) => {
+            emit_error!(input.ident, err.to_string());
+            TokenStream::default()
+        }
+    }
 }

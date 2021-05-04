@@ -12,7 +12,7 @@ The `Permissions` struct is constructed from a list of `Statement`s. The `Statem
 
 The `ResourceName` struct describes a unique name/id of *anything* in your application. This is meant to be similar to [ARNs in IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-arns), but instead of being restricted to a format by this library, you are able to define your own syntax.
 
-The `Action` trait is derive-able, and will convert any enum to something that can be permitted or denied to any `ResourceName`. This derive macro only supports enums with variants that have no parameters, or only have a single name-less parameter that is also implements `Action`.
+The `Action` trait is derive-able, and will convert any enum to something that can be permitted or denied to any `ResourceName`. This derive macro only supports enums with variants that have no parameters, or only have a single name-less parameter that also implements `Action`.
 
 An example `Action` enum might look like:
 
@@ -133,13 +133,13 @@ To implement the API, you would implement each of the `Handler` traits, as well 
 pub struct Dispatcher;
 
 impl RequestDispatcher for Dispatcher {
-    type Output: ();
-    type Error: anyhow::Error;
+    type Output = ();
+    type Error = anyhow::Error;
 
     // These types could be independent if you wanted more modularity.
-    type GetPublicDataHandler: Self;
-    type FlushCacheHandler: Self;
-    type CreateUserHandler: Self;
+    type GetPublicDataHandler = Self;
+    type FlushCacheHandler = Self;
+    type CreateUserHandler = Self;
 }
 
 impl GetPublicDataHandler for Dispatcher {
@@ -164,7 +164,7 @@ impl FlushCacheHandler for Dispatcher {
     }
 }
 
-impl FlushCacheHandler for Dispatcher {
+impl CreateUserHandler for Dispatcher {
     type Dispatcher: Self;
 
     fn resource_name(_username: &str) -> ResourceName {

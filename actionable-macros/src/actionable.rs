@@ -10,6 +10,10 @@ struct Actionable {
     ident: syn::Ident,
     vis: syn::Visibility,
     data: ast::Data<Variant, ()>,
+
+    /// Overrides the crate name for `actionable` references.
+    #[darling(default)]
+    actionable: Option<String>,
 }
 
 #[derive(Debug, FromMeta)]
@@ -31,7 +35,6 @@ struct Variant {
     ident: syn::Ident,
     fields: ast::Fields<Field>,
 
-    #[darling(default)]
     protection: Protection,
 }
 
@@ -52,6 +55,7 @@ impl Variant {
         enum_name: &syn::Ident,
         generated_dispatcher_name: &syn::Ident,
         pub_tokens: &TokenStream,
+        actionable: &syn::Ident,
     ) -> VariantResult {
         let variant_name = &self.ident;
         let handler_name =
@@ -84,6 +88,7 @@ impl Variant {
             &method_parameters,
             &byref_method_parameters,
             pub_tokens,
+            actionable,
         );
 
         let match_case = self.generate_match_case(
@@ -101,7 +106,9 @@ impl Variant {
         }
     }
 
-    #[allow(clippy::cognitive_complexity)] // The complexity is because of the multiple big quote! macros, but I don't see a way to make this much easier to read
+    #[allow(clippy::cognitive_complexity)]
+    // The complexity is because of the multiple big quote! macros, but I don't see a way to make this much easier to read
+    #[allow(clippy::too_many_arguments)] // TODO maybe refactor?
     fn generate_handler(
         &self,
         handler_name: &syn::Ident,
@@ -110,18 +117,20 @@ impl Variant {
         method_parameters: &[TokenStream],
         byref_method_parameters: &[TokenStream],
         pub_tokens: &TokenStream,
+        actionable: &syn::Ident,
     ) -> Handler {
         let variant_name = &self.ident;
 
         let mut handle_parameters = enum_parameters.to_vec();
         handle_parameters.insert(0, syn::Ident::new("self", variant_name.span()));
 
+        let self_as_dispatcher = quote! {<Self::Dispatcher as #generated_dispatcher_name>};
         let result_type = quote!(Result<
-            <Self::Dispatcher as #generated_dispatcher_name>::Output,
-            <Self::Dispatcher as #generated_dispatcher_name>::Error
+            #self_as_dispatcher::Output,
+            #self_as_dispatcher::Error
         >);
 
-        let permission_denied_error = quote!(Err(<Self::Dispatcher as #generated_dispatcher_name>::Error::from(actionable::PermissionDenied {
+        let permission_denied_error = quote!(Err(#self_as_dispatcher::Error::from(#actionable::PermissionDenied {
             resource,
             action: action.name(),
         })));
@@ -138,13 +147,13 @@ impl Variant {
 
                 quote! {
                     #[allow(clippy::ptr_arg)]
-                    fn resource_name(#(#byref_method_parameters),*) -> actionable::ResourceName;
-                    type Action: actionable::Action;
+                    fn resource_name(#(#byref_method_parameters),*) -> #actionable::ResourceName;
+                    type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
                     async fn handle(
                         dispatcher: &Self::Dispatcher,
-                        permissions: &actionable::Permissions,
+                        permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
                         let resource = Self::resource_name(#(&#enum_parameters),*);
@@ -167,18 +176,15 @@ impl Variant {
 
                 quote! {
                     #[allow(clippy::ptr_arg)]
-                    fn is_allowed(permissions: &actionable::Permissions, #(#byref_method_parameters),*) -> bool;
+                    async fn verify_permissions(dispatcher: &Self::Dispatcher, permissions: &#actionable::Permissions, #(#byref_method_parameters),*) -> Result<(), #self_as_dispatcher::Error>;
 
                     async fn handle(
                         dispatcher: &Self::Dispatcher,
-                        permissions: &actionable::Permissions,
+                        permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
-                        if Self::is_allowed(permissions, #(&#enum_parameters),*) {
-                            Self::handle_protected(dispatcher, #(#enum_parameters),*).await
-                        } else {
-                            todo!("Err(Self::Error::from(PermissionDenied))")
-                        }
+                        Self::verify_permissions(dispatcher, permissions, #(&#enum_parameters),*).await?;
+                        Self::handle_protected(dispatcher, #(#enum_parameters),*).await
                     }
 
                     async fn handle_protected(
@@ -193,7 +199,7 @@ impl Variant {
             parameters: handle_parameters,
             tokens: quote_spanned! {
                 variant_name.span() =>
-                    #[async_trait::async_trait]
+                    #[#actionable::async_trait::async_trait]
                     #pub_tokens trait #handler_name: Send + Sync {
                         type Dispatcher: #generated_dispatcher_name;
 
@@ -245,6 +251,7 @@ impl Field {}
 
 impl ToTokens for Actionable {
     fn to_tokens(&self, tokens: &mut TokenStream) {
+        let enum_name = &self.ident;
         let enum_data = self
             .data
             .as_ref()
@@ -257,31 +264,37 @@ impl ToTokens for Actionable {
             _ => TokenStream::default(),
         };
 
+        let actionable = self.actionable.as_deref().unwrap_or("actionable");
+        let actionable = syn::Ident::new(actionable, enum_name.span());
+
         let mut handlers = Vec::new();
         let mut associated_types = Vec::new();
         let mut match_cases = Vec::new();
-
-        let enum_name = &self.ident;
 
         let generated_dispatcher_name =
             syn::Ident::new(&format!("{}Dispatcher", enum_name), enum_name.span());
 
         for variant in &enum_data {
-            let result = variant.generate_code(enum_name, &generated_dispatcher_name, &pub_tokens);
+            let result = variant.generate_code(
+                enum_name,
+                &generated_dispatcher_name,
+                &pub_tokens,
+                &actionable,
+            );
             handlers.push(result.handler);
             associated_types.push(result.associated_type);
             match_cases.push(result.match_case);
         }
 
         tokens.extend(quote! {
-            #[async_trait::async_trait]
+            #[#actionable::async_trait::async_trait]
             #pub_tokens trait #generated_dispatcher_name: Send + Sync {
                 type Output: Send + Sync;
-                type Error: From<actionable::PermissionDenied> + Send + Sync;
+                type Error: From<#actionable::PermissionDenied> + Send + Sync;
 
                 #(#associated_types)*
 
-                async fn act(&self, request: #enum_name, permissions: &actionable::Permissions) -> Result<Self::Output, Self::Error> {
+                async fn dispatch(&self, request: #enum_name, permissions: &#actionable::Permissions) -> Result<Self::Output, Self::Error> {
                     match request {
                         #(#match_cases)*
                     }

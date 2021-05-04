@@ -16,7 +16,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 let ident_as_string = ident.to_string();
                 match variant.fields.len() {
                     0 => {
-                        fields.push(quote! { Self::#ident => ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)]) });
+                        fields.push(quote! { Self::#ident => actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)]) });
                     }
                     1 => {
                         fields.push(quote! {
@@ -41,7 +41,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl Action for #name {
-            fn name(&self) -> ActionName {
+            fn name(&self) -> actionable::ActionName {
                 match self {
                     #(
                         #fields

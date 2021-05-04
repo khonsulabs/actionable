@@ -22,6 +22,8 @@ pub use self::{
 };
 
 pub use actionable_macros::Actionable;
+#[doc(hidden)]
+pub use async_trait;
 
 #[cfg(test)]
 mod tests;
