@@ -91,10 +91,12 @@ impl ToTokens for Actionable {
             }
 
             let mut handle_parameters = enum_parameters.clone();
+            handle_parameters.insert(0, syn::Ident::new("self", variant_name.span()));
 
             let implementation = match variant.protection {
                 Protection::None => quote! {
                     async fn handle(
+                        dispatcher: &Self::Dispatcher,
                         #(#method_parameters),*
                     ) -> Result<
                         <Self::Dispatcher as #generated_dispatcher_name>::Output,
@@ -103,7 +105,7 @@ impl ToTokens for Actionable {
                 },
                 Protection::Simple => {
                     handle_parameters
-                        .insert(0, syn::Ident::new("permissions", variant_name.span()));
+                        .insert(1, syn::Ident::new("permissions", variant_name.span()));
 
                     quote! {
                         fn resource_name(#(#byref_method_parameters),*) -> actionable::ResourceName;
@@ -111,6 +113,7 @@ impl ToTokens for Actionable {
                         fn action() -> Self::Action;
 
                         async fn handle(
+                            dispatcher: &Self::Dispatcher,
                             permissions: &actionable::Permissions,
                             #(#method_parameters),*
                         ) -> Result<
@@ -118,13 +121,14 @@ impl ToTokens for Actionable {
                             <Self::Dispatcher as #generated_dispatcher_name>::Error
                         > {
                             if permissions.allowed_to(&Self::resource_name(#(&#enum_parameters),*), &Self::action()) {
-                                Self::handle_protected(#(#enum_parameters),*).await
+                                Self::handle_protected(dispatcher, #(#enum_parameters),*).await
                             } else {
                                 todo!("Err(Self::Error::from(PermissionDenied))")
                             }
                         }
 
                         async fn handle_protected(
+                            dispatcher: &Self::Dispatcher,
                             #(#method_parameters),*
                         ) -> Result<
                             <Self::Dispatcher as #generated_dispatcher_name>::Output,
@@ -134,12 +138,13 @@ impl ToTokens for Actionable {
                 }
                 Protection::Custom => {
                     handle_parameters
-                        .insert(0, syn::Ident::new("permissions", variant_name.span()));
+                        .insert(1, syn::Ident::new("permissions", variant_name.span()));
 
                     quote! {
                         fn is_allowed(permissions: &actionable::Permissions, #(#byref_method_parameters),*) -> bool;
 
                         async fn handle(
+                            dispatcher: &Self::Dispatcher,
                             permissions: &actionable::Permissions,
                             #(#method_parameters),*
                         ) -> Result<
@@ -147,13 +152,14 @@ impl ToTokens for Actionable {
                             <Self::Dispatcher as #generated_dispatcher_name>::Error
                         > {
                             if Self::is_allowed(permissions, #(&#enum_parameters),*) {
-                                Self::handle_protected(#(#enum_parameters),*).await
+                                Self::handle_protected(dispatcher, #(#enum_parameters),*).await
                             } else {
                                 todo!("Err(Self::Error::from(PermissionDenied))")
                             }
                         }
 
                         async fn handle_protected(
+                            dispatcher: &Self::Dispatcher,
                             #(#method_parameters),*
                         ) -> Result<
                             <Self::Dispatcher as #generated_dispatcher_name>::Output,

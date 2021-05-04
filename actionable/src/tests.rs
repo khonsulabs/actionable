@@ -115,7 +115,7 @@ impl RequestDispatcher for Dispatcher {
 impl UnprotectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(arg1: u64) -> Result<(), anyhow::Error> {
+    async fn handle(dispatcher: &Self::Dispatcher, arg1: u64) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -124,7 +124,7 @@ impl UnprotectedEnumParameterHandler for Dispatcher {
 impl UnprotectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle() -> Result<(), anyhow::Error> {
+    async fn handle(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -142,7 +142,10 @@ impl SimplyPotectedEnumParameterHandler for Dispatcher {
         TestActions::DoSomething
     }
 
-    async fn handle_protected(arg1: u64) -> Result<(), anyhow::Error> {
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        arg1: u64,
+    ) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -160,7 +163,7 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
         TestActions::DoSomething
     }
 
-    async fn handle_protected() -> Result<(), anyhow::Error> {
+    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -173,7 +176,7 @@ impl CustomProtectedNoParametersHandler for Dispatcher {
         todo!()
     }
 
-    async fn handle_protected() -> Result<(), anyhow::Error> {
+    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -186,7 +189,10 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
         todo!()
     }
 
-    async fn handle_protected(arg1: u64) -> Result<(), anyhow::Error> {
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        arg1: u64,
+    ) -> Result<(), anyhow::Error> {
         todo!()
     }
 }

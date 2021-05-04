@@ -89,7 +89,7 @@ pub trait RequestDispatcher: Send + Sync {
 pub trait GetPublicDataHandler {
     type Dispatcher: RequestDispatcher;
 
-    async fn handle() ->
+    async fn handle(dispatcher: &Self::Dispatcher) ->
         Result<
             <Self::Dispatcher as RequestDispatcher>::Output,
             <Self::Dispatcher as RequestDispatcher>::Error,
@@ -102,7 +102,7 @@ pub trait FlushCacheHandler {
 
     fn is_allowed(permissions: &actionable::Permissions, arg1: &u64) -> bool;
 
-    async fn handle_protected(arg1: u64) ->
+    async fn handle_protected(dispatcher: &Self::Dispatcher, arg1: u64) ->
         Result<
             <Self::Dispatcher as RequestDispatcher>::Output,
             <Self::Dispatcher as RequestDispatcher>::Error,
@@ -117,7 +117,7 @@ pub trait CreateUserHandler {
     fn resource_name(username: &str) -> ResourceName;
     fn action() -> Action;
 
-    async fn handle_protected(username: String) ->
+    async fn handle_protected(dispatcher: &Self::Dispatcher, username: String) ->
         Result<
             <Self::Dispatcher as RequestDispatcher>::Output,
             <Self::Dispatcher as RequestDispatcher>::Error,
