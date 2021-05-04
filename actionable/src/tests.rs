@@ -99,7 +99,9 @@ enum Request {
     #[actionable(protection = "custom")]
     CustomProtectedEnumParameter(u64),
     #[actionable(protection = "custom")]
-    CustomProtectedStructParameter(u64),
+    CustomProtectedStructParameter {
+        value: String,
+    },
     // #[actionable(subaction)]
     // Custom(YourType)
 }
@@ -249,13 +251,13 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
 impl CustomProtectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    fn is_allowed(permissions: &Permissions, arg1: &u64) -> bool {
+    fn is_allowed(permissions: &Permissions, arg1: &String) -> bool {
         todo!()
     }
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
-        value: u64,
+        value: String,
     ) -> Result<(), anyhow::Error> {
         todo!()
     }

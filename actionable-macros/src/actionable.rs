@@ -137,6 +137,7 @@ impl Variant {
                 handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
                 quote! {
+                    #[allow(clippy::ptr_arg)]
                     fn resource_name(#(#byref_method_parameters),*) -> actionable::ResourceName;
                     type Action: actionable::Action;
                     fn action() -> Self::Action;
@@ -165,6 +166,7 @@ impl Variant {
                 handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
                 quote! {
+                    #[allow(clippy::ptr_arg)]
                     fn is_allowed(permissions: &actionable::Permissions, #(#byref_method_parameters),*) -> bool;
 
                     async fn handle(
