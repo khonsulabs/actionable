@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 use std::borrow::Cow;
 
 use crate::{Action, ActionName, ActionNameList, Actionable, Permissions, ResourceName, Statement};
@@ -77,16 +79,27 @@ use crate as actionable;
 
 #[derive(Actionable, Debug)]
 enum Request {
-    UnprotectedEnumParameter(u64),
     UnprotectedNoParameters,
+    UnprotectedEnumParameter(u64),
+    UnprotectedStructParameter {
+        value: u64,
+    },
+
+    #[actionable(protection = "simple")]
+    SimplyProtectedNoParameters,
     #[actionable(protection = "simple")]
     SimplyPotectedEnumParameter(u64),
     #[actionable(protection = "simple")]
-    SimplyProtectedNoParameters,
+    SimplyPotectedStructParameter {
+        value: u64,
+    },
+
+    #[actionable(protection = "custom")]
+    CustomProtectedNoParameters,
     #[actionable(protection = "custom")]
     CustomProtectedEnumParameter(u64),
     #[actionable(protection = "custom")]
-    CustomProtectedNoParameters,
+    CustomProtectedStructParameter(u64),
     // #[actionable(subaction)]
     // Custom(YourType)
 }
@@ -103,12 +116,17 @@ impl RequestDispatcher for Dispatcher {
     type Output = ();
     type Error = anyhow::Error;
 
-    type UnprotectedEnumParameterHandler = Self;
     type UnprotectedNoParametersHandler = Self;
-    type SimplyPotectedEnumParameterHandler = Self;
+    type UnprotectedEnumParameterHandler = Self;
+    type UnprotectedStructParameterHandler = Self;
+
     type SimplyProtectedNoParametersHandler = Self;
+    type SimplyPotectedEnumParameterHandler = Self;
+    type SimplyPotectedStructParameterHandler = Self;
+
     type CustomProtectedNoParametersHandler = Self;
     type CustomProtectedEnumParameterHandler = Self;
+    type CustomProtectedStructParameterHandler = Self;
 }
 
 #[async_trait::async_trait]
@@ -116,6 +134,15 @@ impl UnprotectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
     async fn handle(dispatcher: &Self::Dispatcher, arg1: u64) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+}
+
+#[async_trait::async_trait]
+impl UnprotectedStructParameterHandler for Dispatcher {
+    type Dispatcher = Self;
+
+    async fn handle(dispatcher: &Self::Dispatcher, value: u64) -> Result<(), anyhow::Error> {
         todo!()
     }
 }
@@ -145,6 +172,27 @@ impl SimplyPotectedEnumParameterHandler for Dispatcher {
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         arg1: u64,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+}
+
+#[async_trait::async_trait]
+impl SimplyPotectedStructParameterHandler for Dispatcher {
+    type Dispatcher = Self;
+    type Action = TestActions;
+
+    fn resource_name(arg1: &u64) -> ResourceName {
+        todo!()
+    }
+
+    fn action() -> Self::Action {
+        TestActions::DoSomething
+    }
+
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        value: u64,
     ) -> Result<(), anyhow::Error> {
         todo!()
     }
@@ -192,6 +240,22 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         arg1: u64,
+    ) -> Result<(), anyhow::Error> {
+        todo!()
+    }
+}
+
+#[async_trait::async_trait]
+impl CustomProtectedStructParameterHandler for Dispatcher {
+    type Dispatcher = Self;
+
+    fn is_allowed(permissions: &Permissions, arg1: &u64) -> bool {
+        todo!()
+    }
+
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        value: u64,
     ) -> Result<(), anyhow::Error> {
         todo!()
     }
