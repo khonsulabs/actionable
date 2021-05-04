@@ -14,7 +14,7 @@ impl Permissions {
     /// `resource_name`. Returns true if the action should be allowed. If no
     /// statements that match `resource_name` allow `action`, false will be
     /// returned.
-    pub fn allowed_to<R: AsRef<[Identifier<'static>]>, P: Action>(
+    pub fn allowed_to<'a, R: AsRef<[Identifier<'a>]>, P: Action>(
         &self,
         resource_name: R,
         action: &P,

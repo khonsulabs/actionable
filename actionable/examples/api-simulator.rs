@@ -74,7 +74,7 @@ impl AddUserHandler for Dispatcher {
         // If you need just a single permissions check, you should just use the
         // "simple" protection approach. If you're needing more complicated
         // behavior, this approach can be used.
-        if permissions.allowed_to(ResourceName::named(username.clone()), &ApiActions::AddUser) {
+        if permissions.allowed_to(ResourceName::named(username), &ApiActions::AddUser) {
             Ok(())
         } else {
             anyhow::bail!("Not allowed to delete users")
@@ -148,7 +148,7 @@ async fn main() -> anyhow::Result<()> {
         allowed: true,
     }]);
 
-    // For unknown reasons, all unregistered users can delete jon
+    // For inexplicable reasons, all unregistered users can delete jon
     let default_permissions = Permissions::from(vec![Statement {
         resources: vec![ResourceName::named("jon")],
         actions: ActionNameList::from(ApiActions::DeleteUser),

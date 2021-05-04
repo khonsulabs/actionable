@@ -11,7 +11,7 @@ use super::{Action, ActionName};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Statement {
     /// The list of resources this statement applies to.
-    pub resources: Vec<ResourceName>,
+    pub resources: Vec<ResourceName<'static>>,
     /// The list of actions this statement applies to.
     pub actions: ActionNameList,
     /// Whether the `actions` should be allowed or disallowed.
@@ -27,6 +27,18 @@ pub enum Identifier<'a> {
     Integer(u64),
     /// A string identifier.
     String(Cow<'a, str>),
+}
+
+impl<'a> Identifier<'a> {
+    /// Convert this identifier to an un-borrowed identifier.
+    #[must_use]
+    pub fn to_owned(&self) -> Identifier<'static> {
+        match self {
+            Self::Any => Identifier::Any,
+            Self::Integer(value) => Identifier::Integer(*value),
+            Self::String(value) => Identifier::String(Cow::Owned(value.to_string())),
+        }
+    }
 }
 
 impl<'a> Display for Identifier<'a> {
@@ -48,6 +60,12 @@ impl<'a> From<u64> for Identifier<'a> {
 impl<'a> From<&'a str> for Identifier<'a> {
     fn from(id: &'a str) -> Self {
         Self::String(Cow::Borrowed(id))
+    }
+}
+
+impl<'a> From<&'a String> for Identifier<'a> {
+    fn from(id: &'a String) -> Self {
+        Self::from(id.as_str())
     }
 }
 
@@ -89,9 +107,17 @@ impl From<Vec<ActionName>> for ActionNameList {
 
 /// A unique name/identifier of a resource.
 #[derive(Default, Debug, Serialize, Deserialize)]
-pub struct ResourceName(Vec<Identifier<'static>>);
+pub struct ResourceName<'a>(Vec<Identifier<'a>>);
 
-impl Display for ResourceName {
+impl<'a> ResourceName<'a> {
+    /// Convert a borrowed name to an un-borrwed name.
+    #[must_use]
+    pub fn to_owned(&self) -> ResourceName<'static> {
+        ResourceName(self.0.iter().map(Identifier::to_owned).collect())
+    }
+}
+
+impl<'a> Display for ResourceName<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for (index, identifier) in self.0.iter().enumerate() {
             if index > 0 {
@@ -105,7 +131,7 @@ impl Display for ResourceName {
     }
 }
 
-impl ResourceName {
+impl<'a> ResourceName<'a> {
     /// Creates a `ResourceName` that matches any identifier.
     #[must_use]
     pub fn any() -> Self {
@@ -114,28 +140,28 @@ impl ResourceName {
 
     /// Creates a `ResourceName` with `name`.
     #[must_use]
-    pub fn named<I: Into<Identifier<'static>>>(name: I) -> Self {
+    pub fn named<I: Into<Identifier<'a>>>(name: I) -> Self {
         Self(vec![name.into()])
     }
 
     /// Adds another name segment.
     #[must_use]
-    pub fn and<I: Into<Identifier<'static>>>(mut self, name: I) -> Self {
+    pub fn and<I: Into<Identifier<'a>>>(mut self, name: I) -> Self {
         self.0.push(name.into());
         self
     }
 }
 
-impl AsRef<[Identifier<'static>]> for ResourceName {
-    fn as_ref(&self) -> &[Identifier<'static>] {
+impl<'a> AsRef<[Identifier<'a>]> for ResourceName<'a> {
+    fn as_ref(&self) -> &[Identifier<'a>] {
         &self.0
     }
 }
 
-impl IntoIterator for ResourceName {
-    type Item = Identifier<'static>;
+impl<'a> IntoIterator for ResourceName<'a> {
+    type Item = Identifier<'a>;
 
-    type IntoIter = std::vec::IntoIter<Identifier<'static>>;
+    type IntoIter = std::vec::IntoIter<Identifier<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

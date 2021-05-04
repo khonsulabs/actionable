@@ -33,7 +33,7 @@ mod tests;
 #[error("Action '{action}' was denied on resource'{resource}'")]
 pub struct PermissionDenied {
     /// The resource that `action` was attempted upon.
-    pub resource: ResourceName,
+    pub resource: ResourceName<'static>,
     /// The `action` attempted upon `resource`.
     pub action: ActionName,
 }

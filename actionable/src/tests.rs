@@ -172,7 +172,7 @@ impl SimplyProtectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name(arg1: &u64) -> ResourceName {
+    fn resource_name(arg1: &u64) -> ResourceName<'_> {
         ResourceName::named(*arg1)
     }
 
@@ -193,7 +193,7 @@ impl SimplyProtectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name(arg1: &u64) -> ResourceName {
+    fn resource_name(arg1: &u64) -> ResourceName<'_> {
         ResourceName::named(*arg1)
     }
 
@@ -214,7 +214,7 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name() -> ResourceName {
+    fn resource_name() -> ResourceName<'static> {
         ResourceName::named(0)
     }
 

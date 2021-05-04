@@ -131,7 +131,7 @@ impl Variant {
         >);
 
         let permission_denied_error = quote!(Err(#self_as_dispatcher::Error::from(#actionable::PermissionDenied {
-            resource,
+            resource: resource.to_owned(),
             action: action.name(),
         })));
 
@@ -145,9 +145,15 @@ impl Variant {
             Protection::Simple => {
                 handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
+                let name_lifetime = if byref_method_parameters.is_empty() {
+                    quote!(<'static>)
+                } else {
+                    quote!(<'_>)
+                };
+
                 quote! {
                     #[allow(clippy::ptr_arg)]
-                    fn resource_name(#(#byref_method_parameters),*) -> #actionable::ResourceName;
+                    fn resource_name(#(#byref_method_parameters),*) -> #actionable::ResourceName#name_lifetime;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
@@ -200,6 +206,7 @@ impl Variant {
             tokens: quote_spanned! {
                 variant_name.span() =>
                     #[#actionable::async_trait::async_trait]
+                    #[doc(hidden)]
                     #pub_tokens trait #handler_name: Send + Sync {
                         type Dispatcher: #generated_dispatcher_name;
 
@@ -288,6 +295,7 @@ impl ToTokens for Actionable {
 
         tokens.extend(quote! {
             #[#actionable::async_trait::async_trait]
+            #[doc(hidden)]
             #pub_tokens trait #generated_dispatcher_name: Send + Sync {
                 type Output: Send + Sync;
                 type Error: From<#actionable::PermissionDenied> + Send + Sync;
