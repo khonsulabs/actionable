@@ -1,0 +1,1 @@
+initSidebarItems({"derive":[["Action","Derives the `actionable::Action` trait."],["Actionable","Creates a trait named `Actionable`."]]});
