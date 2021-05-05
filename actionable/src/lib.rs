@@ -15,6 +15,8 @@ mod action;
 mod permissions;
 mod statement;
 
+use serde::{Deserialize, Serialize};
+
 pub use self::{
     action::{Action, ActionName},
     permissions::Permissions,
@@ -29,7 +31,7 @@ pub use async_trait;
 mod tests;
 
 /// An `action` was denied.
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Clone, Debug, Serialize, Deserialize)]
 #[error("Action '{action}' was denied on resource'{resource}'")]
 pub struct PermissionDenied {
     /// The resource that `action` was attempted upon.

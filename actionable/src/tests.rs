@@ -144,7 +144,11 @@ pub enum TestError {
 impl UnprotectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher, arg1: u64) -> Result<Option<u64>, TestError> {
+    async fn handle(
+        dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
+        arg1: u64,
+    ) -> Result<Option<u64>, TestError> {
         Ok(Some(arg1))
     }
 }
@@ -153,7 +157,11 @@ impl UnprotectedEnumParameterHandler for Dispatcher {
 impl UnprotectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher, value: u64) -> Result<Option<u64>, TestError> {
+    async fn handle(
+        dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
+        value: u64,
+    ) -> Result<Option<u64>, TestError> {
         Ok(Some(value))
     }
 }
@@ -162,7 +170,10 @@ impl UnprotectedStructParameterHandler for Dispatcher {
 impl UnprotectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+    async fn handle(
+        dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
+    ) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
@@ -172,7 +183,7 @@ impl SimplyProtectedEnumParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name(arg1: &u64) -> ResourceName<'_> {
+    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, arg1: &'a u64) -> ResourceName<'a> {
         ResourceName::named(*arg1)
     }
 
@@ -193,7 +204,7 @@ impl SimplyProtectedStructParameterHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name(arg1: &u64) -> ResourceName<'_> {
+    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, arg1: &'a u64) -> ResourceName<'a> {
         ResourceName::named(*arg1)
     }
 
@@ -214,7 +225,7 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name() -> ResourceName<'static> {
+    fn resource_name(_dispatcher: &Self::Dispatcher) -> ResourceName<'static> {
         ResourceName::named(0)
     }
 
@@ -307,7 +318,7 @@ async fn example() {
     // All success (permitted) cases
     assert_eq!(
         dispatcher
-            .dispatch(Request::UnprotectedEnumParameter(42), &permissions,)
+            .dispatch(&permissions, Request::UnprotectedEnumParameter(42),)
             .await
             .unwrap(),
         Some(42)
@@ -315,8 +326,8 @@ async fn example() {
     assert_eq!(
         dispatcher
             .dispatch(
-                Request::UnprotectedStructParameter { value: 42 },
                 &permissions,
+                Request::UnprotectedStructParameter { value: 42 },
             )
             .await
             .unwrap(),
@@ -324,14 +335,14 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(Request::UnprotectedNoParameters, &permissions,)
+            .dispatch(&permissions, Request::UnprotectedNoParameters,)
             .await
             .unwrap(),
         None
     );
     assert_eq!(
         dispatcher
-            .dispatch(Request::SimplyProtectedEnumParameter(42), &permissions,)
+            .dispatch(&permissions, Request::SimplyProtectedEnumParameter(42))
             .await
             .unwrap(),
         Some(42)
@@ -339,8 +350,8 @@ async fn example() {
     assert_eq!(
         dispatcher
             .dispatch(
-                Request::SimplyProtectedStructParameter { value: 42 },
                 &permissions,
+                Request::SimplyProtectedStructParameter { value: 42 },
             )
             .await
             .unwrap(),
@@ -348,7 +359,7 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(Request::CustomProtectedEnumParameter(42), &permissions,)
+            .dispatch(&permissions, Request::CustomProtectedEnumParameter(42))
             .await
             .unwrap(),
         Some(42)
@@ -356,8 +367,8 @@ async fn example() {
     assert_eq!(
         dispatcher
             .dispatch(
-                Request::CustomProtectedStructParameter { value: 42 },
                 &permissions,
+                Request::CustomProtectedStructParameter { value: 42 },
             )
             .await
             .unwrap(),
@@ -367,21 +378,21 @@ async fn example() {
     // Permission denied errors
     assert!(matches!(
         dispatcher
-            .dispatch(Request::SimplyProtectedNoParameters, &permissions,)
+            .dispatch(&permissions, Request::SimplyProtectedNoParameters)
             .await,
         Err(TestError::PermissionDenied(_))
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(Request::SimplyProtectedEnumParameter(1), &permissions,)
+            .dispatch(&permissions, Request::SimplyProtectedEnumParameter(1))
             .await,
         Err(TestError::PermissionDenied(_))
     ));
     assert!(matches!(
         dispatcher
             .dispatch(
-                Request::SimplyProtectedStructParameter { value: 1 },
                 &permissions,
+                Request::SimplyProtectedStructParameter { value: 1 },
             )
             .await,
         Err(TestError::PermissionDenied(_))
@@ -390,21 +401,21 @@ async fn example() {
     // Custom errors
     assert!(matches!(
         dispatcher
-            .dispatch(Request::CustomProtectedNoParameters, &permissions,)
+            .dispatch(&permissions, Request::CustomProtectedNoParameters)
             .await,
         Err(TestError::CustomError)
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(Request::CustomProtectedEnumParameter(1), &permissions,)
+            .dispatch(&permissions, Request::CustomProtectedEnumParameter(1))
             .await,
         Err(TestError::CustomError)
     ));
     assert!(matches!(
         dispatcher
             .dispatch(
-                Request::CustomProtectedStructParameter { value: 1 },
                 &permissions,
+                Request::CustomProtectedStructParameter { value: 1 },
             )
             .await,
         Err(TestError::CustomError)

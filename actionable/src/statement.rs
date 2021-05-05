@@ -106,7 +106,7 @@ impl From<Vec<ActionName>> for ActionNameList {
 }
 
 /// A unique name/identifier of a resource.
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceName<'a>(Vec<Identifier<'a>>);
 
 impl<'a> ResourceName<'a> {

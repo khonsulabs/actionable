@@ -67,6 +67,15 @@ impl Variant {
         let mut byref_method_parameters = Vec::new();
         let mut enum_parameters = Vec::new();
         let mut is_struct_style = false;
+        let byref_lifetime = if matches!(self.protection, Protection::Simple) {
+            // if self.fields.len() > 1 {
+            quote!('a)
+            // } else {
+            //     quote!('_)
+            // }
+        } else {
+            TokenStream::default()
+        };
 
         for (index, field) in self.fields.iter().enumerate() {
             let arg_name = if let Some(ident) = &field.ident {
@@ -77,7 +86,7 @@ impl Variant {
             };
             let arg_type = &field.ty;
             method_parameters.push(quote!(#arg_name: #arg_type));
-            byref_method_parameters.push(quote!(#arg_name: &#arg_type));
+            byref_method_parameters.push(quote!(#arg_name: &#byref_lifetime #arg_type));
             enum_parameters.push(arg_name);
         }
 
@@ -123,6 +132,7 @@ impl Variant {
 
         let mut handle_parameters = enum_parameters.to_vec();
         handle_parameters.insert(0, syn::Ident::new("self", variant_name.span()));
+        handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
         let self_as_dispatcher = quote! {<Self::Dispatcher as #generated_dispatcher_name>};
         let result_type = quote!(Result<
@@ -130,30 +140,23 @@ impl Variant {
             #self_as_dispatcher::Error
         >);
 
-        let permission_denied_error = quote!(Err(#self_as_dispatcher::Error::from(#actionable::PermissionDenied {
-            resource: resource.to_owned(),
-            action: action.name(),
-        })));
-
         let implementation = match self.protection {
             Protection::None => quote! {
                 async fn handle(
                     dispatcher: &Self::Dispatcher,
+                    permissions: &#actionable::Permissions,
                     #(#method_parameters),*
                 ) -> #result_type;
             },
             Protection::Simple => {
-                handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
-
-                let name_lifetime = if byref_method_parameters.is_empty() {
-                    quote!(<'static>)
-                } else {
-                    quote!(<'_>)
-                };
+                let permission_denied_error = quote!(Err(#self_as_dispatcher::Error::from(#actionable::PermissionDenied {
+                    resource: resource.to_owned(),
+                    action: #actionable::Action::name(&action),
+                })));
 
                 quote! {
                     #[allow(clippy::ptr_arg)]
-                    fn resource_name(#(#byref_method_parameters),*) -> #actionable::ResourceName#name_lifetime;
+                    fn resource_name<'a>(dispatcher: &'a Self::Dispatcher,#(#byref_method_parameters),*) -> #actionable::ResourceName<'a>;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
@@ -162,7 +165,7 @@ impl Variant {
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
-                        let resource = Self::resource_name(#(&#enum_parameters),*);
+                        let resource = Self::resource_name(dispatcher, #(&#enum_parameters),*);
                         let action = Self::action();
                         if permissions.allowed_to(&resource, &action) {
                             Self::handle_protected(dispatcher, #(#enum_parameters),*).await
@@ -178,8 +181,6 @@ impl Variant {
                 }
             }
             Protection::Custom => {
-                handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
-
                 quote! {
                     #[allow(clippy::ptr_arg)]
                     async fn verify_permissions(dispatcher: &Self::Dispatcher, permissions: &#actionable::Permissions, #(#byref_method_parameters),*) -> Result<(), #self_as_dispatcher::Error>;
@@ -302,7 +303,7 @@ impl ToTokens for Actionable {
 
                 #(#associated_types)*
 
-                async fn dispatch(&self, request: #enum_name, permissions: &#actionable::Permissions) -> Result<Self::Output, Self::Error> {
+                async fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Result<Self::Output, Self::Error> {
                     match request {
                         #(#match_cases)*
                     }

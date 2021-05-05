@@ -18,7 +18,7 @@ impl Action for () {
 }
 
 /// A unique name of an action.
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::module_name_repetitions)] // exported without the module name
 pub struct ActionName(pub Vec<Cow<'static, str>>);
 

@@ -1,6 +1,7 @@
 use actionable::{Action, ActionNameList, Actionable, Permissions, ResourceName, Statement};
 use async_trait::async_trait;
 use std::{
+    borrow::Cow,
     io::{self, BufRead},
     sync::Arc,
 };
@@ -20,6 +21,10 @@ pub enum ApiRequest {
     /// A protected API request that requires implementing `resource_name(&str) -> ResourceName` and `action() -> Action` in the handler.
     #[actionable(protection = "simple")]
     DeleteUser { username: String },
+
+    /// A protected API request that requires implementing `resource_name(&str) -> ResourceName` and `action() -> Action` in the handler.
+    #[actionable(protection = "simple")]
+    DeleteUser3 { username: Cow<'static, str> },
 }
 
 pub enum ApiResponse {
@@ -45,13 +50,14 @@ impl ApiRequestDispatcher for Dispatcher {
     type ListUsersHandler = Self;
     type AddUserHandler = Self;
     type DeleteUserHandler = Self;
+    type DeleteUser3Handler = Self;
 }
 
 #[async_trait]
 impl ListUsersHandler for Dispatcher {
     type Dispatcher = Self;
 
-    async fn handle(dispatcher: &Self) -> anyhow::Result<()> {
+    async fn handle(dispatcher: &Self, _permissions: &Permissions) -> anyhow::Result<()> {
         let users = dispatcher.users.lock().await;
         println!("Current users:");
         for user in users.iter() {
@@ -98,7 +104,7 @@ impl DeleteUserHandler for Dispatcher {
     type Dispatcher = Self;
     type Action = ApiActions;
 
-    fn resource_name(username: &String) -> ResourceName {
+    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, username: &'a String) -> ResourceName<'a> {
         ResourceName::named(username.clone())
     }
 
@@ -109,6 +115,40 @@ impl DeleteUserHandler for Dispatcher {
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
         username: String,
+    ) -> anyhow::Result<()> {
+        let mut users = dispatcher.users.lock().await;
+        let old_len = users.len();
+        users.retain(|u| u != &username);
+
+        if old_len != users.len() {
+            println!("User removed.");
+        } else {
+            anyhow::bail!("User {} not found", username)
+        }
+
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl DeleteUser3Handler for Dispatcher {
+    type Dispatcher = Self;
+    type Action = ApiActions;
+
+    fn resource_name<'a>(
+        _dispatcher: &Self::Dispatcher,
+        username: &'a Cow<'static, str>,
+    ) -> ResourceName<'a> {
+        ResourceName::named(username.as_ref())
+    }
+
+    fn action() -> Self::Action {
+        ApiActions::DeleteUser
+    }
+
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        username: Cow<'static, str>,
     ) -> anyhow::Result<()> {
         let mut users = dispatcher.users.lock().await;
         let old_len = users.len();
@@ -184,39 +224,27 @@ async fn main() -> anyhow::Result<()> {
         println!("2. Add User");
         println!("3. Remove User");
         println!("4. Exit");
-        match lines.next().expect("no command")?.parse()? {
-            1 => {
-                if let Err(err) = dispatcher
-                    .dispatch(ApiRequest::ListUsers, effective_permissions)
-                    .await
-                {
-                    println!("Error received: {:?}", err);
-                }
-            }
+        let request = match lines.next().expect("no command")?.parse()? {
+            1u32 => ApiRequest::ListUsers,
             2 => {
                 println!("Enter the new user's name:");
                 let new_user_name = lines.next().unwrap()?;
-                if let Err(err) = dispatcher
-                    .dispatch(ApiRequest::AddUser(new_user_name), effective_permissions)
-                    .await
-                {
-                    println!("Error received: {:?}", err);
-                }
+                ApiRequest::AddUser(new_user_name)
             }
             3 => {
                 println!("Enter the name of the user you wish to remove:");
                 let username = lines.next().unwrap()?;
-                if let Err(err) = dispatcher
-                    .dispatch(ApiRequest::DeleteUser { username }, effective_permissions)
-                    .await
-                {
-                    println!("Error received: {:?}", err);
-                }
+                ApiRequest::DeleteUser { username }
             }
             4 => break,
             other => {
                 println!("Unknown command number {}. Exiting.", other);
+                continue;
             }
+        };
+
+        if let Err(err) = dispatcher.dispatch(effective_permissions, request).await {
+            println!("Error received: {:?}", err);
         }
     }
 
