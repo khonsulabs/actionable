@@ -168,7 +168,7 @@ impl Variant {
                         let resource = Self::resource_name(dispatcher, #(&#enum_parameters),*);
                         let action = Self::action();
                         if permissions.allowed_to(&resource, &action) {
-                            Self::handle_protected(dispatcher, #(#enum_parameters),*).await
+                            Self::handle_protected(dispatcher, permissions, #(#enum_parameters),*).await
                         } else {
                             #permission_denied_error
                         }
@@ -176,6 +176,7 @@ impl Variant {
 
                     async fn handle_protected(
                         dispatcher: &Self::Dispatcher,
+                        permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type;
                 }

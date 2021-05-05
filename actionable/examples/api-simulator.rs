@@ -114,6 +114,7 @@ impl DeleteUserHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<()> {
         let mut users = dispatcher.users.lock().await;
@@ -148,6 +149,7 @@ impl DeleteUser3Handler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         username: Cow<'static, str>,
     ) -> anyhow::Result<()> {
         let mut users = dispatcher.users.lock().await;

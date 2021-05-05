@@ -103,14 +103,7 @@ enum Request {
     CustomProtectedEnumParameter(u64),
     #[actionable(protection = "custom")]
     CustomProtectedStructParameter { value: u64 },
-    // #[actionable(subaction)]
-    // Custom(YourType)
 }
-
-// #[actionable(parent = Request)]
-// enum YourType {
-
-// }
 
 struct Dispatcher;
 
@@ -193,6 +186,7 @@ impl SimplyProtectedEnumParameterHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         arg1: u64,
     ) -> Result<Option<u64>, TestError> {
         Ok(Some(arg1))
@@ -214,6 +208,7 @@ impl SimplyProtectedStructParameterHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         value: u64,
     ) -> Result<Option<u64>, TestError> {
         Ok(Some(value))
@@ -233,7 +228,10 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
         TestActions::DoSomething
     }
 
-    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
+    ) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
