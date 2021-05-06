@@ -22,3 +22,4 @@ ident_case = "1"
 
 [dev-dependencies]
 compiletest_rs = "0.7"
+actionable = { path = "../actionable" }
