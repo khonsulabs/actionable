@@ -331,10 +331,6 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">default_trait_access</span>)]</span>
 
@@ -406,11 +402,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enum_parameters</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_struct_style</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">let</span> <span class="ident">byref_lifetime</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">protection</span>, <span class="ident">Protection</span>::<span class="ident">Simple</span>) {
-            <span class="comment">// if self.fields.len() &gt; 1 {</span>
             <span class="macro">quote</span><span class="macro">!</span>(<span class="lifetime">&#39;a</span>)
-            <span class="comment">// } else {</span>
-            <span class="comment">//     quote!(&#39;_)</span>
-            <span class="comment">// }</span>
         } <span class="kw">else</span> {
             <span class="ident">TokenStream</span>::<span class="ident">default</span>()
         };

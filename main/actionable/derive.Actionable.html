@@ -1,11 +1,132 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `Actionable` derive in crate `actionable`."><meta name="keywords" content="rust, rustlang, rust-lang, Actionable"><title>actionable::Actionable - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings"></script><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc derive"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../actionable/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="index.html">actionable</a></p><div id="sidebar-vars" data-name="Actionable" data-ty="derive" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Derive Macro <a href="index.html">actionable</a>::<wbr><a class="derive" href="">Actionable</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actionable_macros/lib.rs.html#32" title="goto source code">[src]</a></span></h1><pre class="rust derive">#[derive(Actionable)]
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Derive Macro <a href="index.html">actionable</a>::<wbr><a class="derive" href="">Actionable</a></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/actionable_macros/lib.rs.html#184" title="goto source code">[src]</a></span></h1><pre class="rust derive">#[derive(Actionable)]
 {
     // Attributes available to this derive:
     #[actionable]
 }
-</pre><div class="docblock"><p>Creates a trait named <code>Actionable</code>.</p>
+</pre><div class="docblock"><p>Derives a set of traits that can be used to implement a permissions-driven
+API. There are options that can be customized with the <code>#[actionable]</code>
+attribute at the enum level:</p>
+<ul>
+<li>Crate name override: <code>#[actionable(actionable = &quot;someothername&quot;)]</code>. If you
+find yourself needing to import <code>actionable</code> as another name, this setting
+will replace all mentions of <code>actionable</code> with the identifier specified.</li>
+</ul>
+<h2 id="the-dispatcher-trait" class="section-header"><a href="#the-dispatcher-trait">The Dispatcher Trait</a></h2>
+<p>The first trait that is generated is named <code>&lt;EnumName&gt;Dispatcher</code>. For
+example, if the enum's name is <code>Request</code>, the generated trait name will be
+<code>RequestDispatcher</code>. This trait has no methods for you to implement. It
+defines several associated types:</p>
+<ul>
+<li><code>Output</code>: The <code>Ok</code> side of the <code>Result</code>.</li>
+<li><code>Error</code>: The <code>Err</code> side of the <code>Result</code>. Must implement
+<code>From&lt;actionable::PermissionDenied&gt;</code>.</li>
+<li>For each variant in the enum, another associated type named
+<code>&lt;VariantName&gt;Handler</code>. For example, if the enum variant was
+<code>Request::AddUser</code>, the associated type will be <code>AddUserHandler</code>. Each of
+these associated types must implement the trait of the same name
+(described in the next section).</li>
+</ul>
+<p>The dispatcher trait has a method available for you to use to dispatch
+requests: <code>async fn dispatch(&amp;self, permissions: &amp;Permissions, request: &lt;EnumName&gt;) -&gt; Result&lt;Self::Output, Self::Error&gt;</code>.</p>
+<h2 id="the-handler-traits" class="section-header"><a href="#the-handler-traits">The Handler Traits</a></h2>
+<p>For each variant in the enum, a trait will be generated named
+<code>&lt;VariantName&gt;Handler</code>. Using the same example above, the enum variant
+<code>Request::AddUser</code> would generate the trait <code>AddUserHandler</code>. These traits
+are implemented using the
+<a href="https://crates.io/crate/async-trait"><code>async-trait</code></a> trait.</p>
+<p>Each variant must have a protection method assigned using the
+<code>#[actionable]</code> attribute. There are three protection methods:</p>
+<h3 id="no-protection-actionableprotection--none" class="section-header"><a href="#no-protection-actionableprotection--none">No Protection: <code>#[actionable(protection = &quot;none&quot;)]</code></a></h3>
+<p>A handler with no protection has one method:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">trait</span> <span class="ident">Handler</span> {
+   <span class="kw">type</span> <span class="ident">Dispatcher</span>;
+   <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(
+       <span class="ident">dispatcher</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Dispatcher</span>,
+       <span class="ident">permissions</span>: <span class="kw-2">&amp;</span><span class="ident">Permissions</span>,
+       <span class="comment">/* each field on this variant is passed
+          as a parameter to this method */</span>
+   ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Output</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+}</pre></div>
+<p>Actionable does not do any checks before invoking this handler.</p>
+<h3 id="simple-protection-actionableprotection--simple" class="section-header"><a href="#simple-protection-actionableprotection--simple">Simple Protection: <code>#[actionable(protection = &quot;simple&quot;)]</code></a></h3>
+<p>A handler with simple protection exposes methods and types to allow
+specifying an <code>actionable::ResourceName</code> and an <code>Action</code> for this handler:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">trait</span> <span class="ident">Handler</span> {
+   <span class="kw">type</span> <span class="ident">Dispatcher</span>;
+   <span class="kw">type</span> <span class="ident">Action</span>;
+
+   <span class="kw">fn</span> <span class="ident">resource_name</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+       <span class="ident">dispatcher</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Dispatcher</span>,
+       <span class="comment">/* each field on this variant is passed
+          by reference as a parameter to this method */</span>
+   ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ResourceName</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
+
+   <span class="kw">fn</span> <span class="ident">action</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Action</span>;
+
+   <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_protected</span>(
+       <span class="ident">dispatcher</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Dispatcher</span>,
+       <span class="ident">permissions</span>: <span class="kw-2">&amp;</span><span class="ident">Permissions</span>,
+       <span class="comment">/* each field on this variant is passed
+          as a parameter to this method */</span>
+   ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Output</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+}</pre></div>
+<p>When the handler is invoked, it first checks <code>permissions</code> to ensure that
+<code>action()</code> is allowed to be performed on <code>resource_name()</code>. If it is not
+allowed, an <code>actionable::PermissionDenied</code> error will be returned. If it is
+allowed, <code>handle_protected()</code> will be executed.</p>
+<h3 id="custom-protection-actionableprotection--custom" class="section-header"><a href="#custom-protection-actionableprotection--custom">Custom Protection: <code>#[actionable(protection = &quot;custom&quot;)]</code></a></h3>
+<p>A handler with custom protection has two methods, one to verify permissions and one to execute the protected code:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">async_trait</span>]</span>
+<span class="kw">trait</span> <span class="ident">Handler</span> {
+   <span class="kw">type</span> <span class="ident">Dispatcher</span>;
+   <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">verify_permissions</span>(
+       <span class="ident">dispatcher</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Dispatcher</span>,
+       <span class="ident">permissions</span>: <span class="kw-2">&amp;</span><span class="ident">Permissions</span>,
+       <span class="comment">/* each field on this variant is passed
+          by refrence as a parameter to this method */</span>
+   ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>;
+   <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_protected</span>(<span class="ident">dispatcher</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Dispatcher</span>, <span class="ident">permissions</span>:
+       <span class="kw-2">&amp;</span><span class="ident">Permissions</span>, <span class="comment">/* each field on this variant is passed as a parameter
+       to this method */</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Output</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+}</pre></div>
+<p>Actionable will first call <code>verify_permissions()</code>. If you return <code>Ok(())</code>,
+your <code>handle_protected()</code> method is invoked.</p>
+<h2 id="why-should-you-use-the-built-in-protection-modes" class="section-header"><a href="#why-should-you-use-the-built-in-protection-modes">Why should you use the built-in protection modes?</a></h2>
+<p>Actionable attempts to make permission handling easy to understand and
+implement while making it difficult to forget implementing permission
+handling. This is only effective if you use the protection levels.</p>
+<p>Because Actionable includes <code>permissions</code> in every call to
+<code>handle[_protected]()</code>, technically you could use a protection level of
+<code>none</code> and implement permission handling within the <code>handle()</code> function.
+While it would work, you shouldn't do this.</p>
+<p>Actionable encourages placing information about permission handling in the
+definition of the enum. By using <code>simple</code> and <code>custom</code> protection
+strategies, consumers of your API will be able to see at the enum level what
+APIs check permissions. When trying to understand what permissions are being
+used, this is critical.</p>
+<p>By placing your permission handling code in locations that follow a
+repeatable patern, you're helping anyone who is reading the code separate
+what logic is related to permission handling and what logic is related to
+the API implementation.</p>
+<h2 id="what-protection-mode-should-you-use" class="section-header"><a href="#what-protection-mode-should-you-use">What protection mode should you use?</a></h2>
+<ul>
+<li>If your handler is operating on a single resource and performing a single
+action, use the <code>simple</code> protection mode.</li>
+<li>If your handler needs to check permissions but it's more complicated than
+the first scenario, use the <code>custom</code> protection mode.</li>
+<li>If you aren't enforcing permissions inside of this handler, use the <code>none</code>
+protection mode.</li>
+</ul>
 </div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="actionable"></div>
     <script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

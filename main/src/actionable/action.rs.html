@@ -47,7 +47,7 @@
 
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
-<span class="doccomment">/// An action that can be allowed or disalled.</span>
+<span class="doccomment">/// An action that can be allowed or disallowed.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Action</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
     <span class="doccomment">/// The full name of this action.</span>
     <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ActionName</span>;

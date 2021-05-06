@@ -142,7 +142,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Action</span>, <span class="ident">ActionNameList</span>, <span class="ident">Identifier</span>, <span class="ident">Statement</span>};
 
-<span class="doccomment">/// A collection of allowed permissions.</span>
+<span class="doccomment">/// A collection of allowed permissions. This is constructed from a `Vec&lt;`[`Statement`]`&gt;`. By default, no actions are allowed on any resources.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Permissions</span> {
     <span class="ident">children</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Identifier</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>, <span class="ident">Permissions</span><span class="op">&gt;</span><span class="op">&gt;</span>,
