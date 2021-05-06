@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{Action, ActionNameList, Identifier, Statement};
 
-/// A collection of allowed permissions.
+/// A collection of allowed permissions. This is constructed from a `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
 #[derive(Default, Debug)]
 pub struct Permissions {
     children: Option<HashMap<Identifier<'static>, Permissions>>,

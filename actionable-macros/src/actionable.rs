@@ -68,11 +68,7 @@ impl Variant {
         let mut enum_parameters = Vec::new();
         let mut is_struct_style = false;
         let byref_lifetime = if matches!(self.protection, Protection::Simple) {
-            // if self.fields.len() > 1 {
             quote!('a)
-            // } else {
-            //     quote!('_)
-            // }
         } else {
             TokenStream::default()
         };

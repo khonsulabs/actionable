@@ -5,7 +5,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-/// An action that can be allowed or disalled.
+/// An action that can be allowed or disallowed.
 pub trait Action: Send + Sync {
     /// The full name of this action.
     fn name(&self) -> ActionName;
