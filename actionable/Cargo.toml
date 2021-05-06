@@ -6,13 +6,13 @@ edition = "2018"
 description = "An enum-based async framework for building permission-driven APIs"
 repository = "https://github.com/khonsulabs/actionable"
 license = "MIT OR Apache-2.0"
-keywords = ["api", "async"]
+keywords = ["api", "async", "permissions"]
 categories = ["algorithms"]
 readme = "../README.md"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-actionable-macros = { path = "../actionable-macros" }
+actionable-macros = { path = "../actionable-macros", version = "0.1.0-dev.1" }
 thiserror = "1"
 async-trait = "0.1"
 

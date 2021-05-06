@@ -6,9 +6,10 @@ edition = "2018"
 description = "Macros for `actionable`"
 repository = "https://github.com/khonsulabs/actionable"
 license = "MIT OR Apache-2.0"
-keywords = ["api", "async"]
+keywords = ["api", "async", "permissions"]
 categories = ["algorithms"]
 readme = "../README.md"
+
 [lib]
 proc-macro = true
 
@@ -22,4 +23,4 @@ ident_case = "1"
 
 [dev-dependencies]
 compiletest_rs = "0.7"
-actionable = { path = "../actionable" }
+actionable = { path = "../actionable", version = "0.1.0-dev.1" }
