@@ -23,4 +23,4 @@ ident_case = "1"
 
 [dev-dependencies]
 compiletest_rs = "0.7"
-# actionable = { path = "../actionable", version = "0.1.0-dev.1" }
+actionable = { path = "../actionable", version = "0.1.0-dev.1" }
