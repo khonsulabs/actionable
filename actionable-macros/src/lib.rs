@@ -124,7 +124,8 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 ///
 /// ### Custom Protection: `#[actionable(protection = "custom")]`
 ///
-/// A handler with custom protection has two methods, one to verify permissions and one to execute the protected code:
+/// A handler with custom protection has two methods, one to verify permissions
+/// and one to execute the protected code:
 ///
 /// ```rust
 /// # type Output = ();
@@ -139,10 +140,13 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 ///        /* each field on this variant is passed
 ///           by refrence as a parameter to this method */
 ///    ) -> Result<(), Error>;
-
-///    async fn handle_protected(dispatcher: &Self::Dispatcher, permissions:
-///        &Permissions, /* each field on this variant is passed as a parameter
-///        to this method */) -> Result<Output, Error>;
+///
+///    async fn handle_protected(
+///        dispatcher: &Self::Dispatcher,
+///        permissions: &Permissions,
+///        /* each field on this variant is passed as a parameter
+///        to this method */
+///    ) -> Result<Output, Error>;
 /// }
 /// ```
 ///

@@ -251,7 +251,10 @@ impl CustomProtectedNoParametersHandler for Dispatcher {
         }
     }
 
-    async fn handle_protected(dispatcher: &Self::Dispatcher) -> Result<Option<u64>, TestError> {
+    async fn handle_protected(
+        dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
+    ) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
@@ -274,6 +277,7 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         arg1: u64,
     ) -> Result<Option<u64>, TestError> {
         Ok(Some(arg1))
@@ -298,6 +302,7 @@ impl CustomProtectedStructParameterHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         value: u64,
     ) -> Result<Option<u64>, TestError> {
         Ok(Some(value))

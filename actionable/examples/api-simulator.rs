@@ -100,6 +100,7 @@ impl AddUserHandler for Dispatcher {
 
     async fn handle_protected(
         dispatcher: &Self::Dispatcher,
+        _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<ApiResponse> {
         let mut users = dispatcher.users.lock().await;

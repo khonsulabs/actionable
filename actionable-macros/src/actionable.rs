@@ -188,11 +188,12 @@ impl Variant {
                         #(#method_parameters),*
                     ) -> #result_type {
                         Self::verify_permissions(dispatcher, permissions, #(&#enum_parameters),*).await?;
-                        Self::handle_protected(dispatcher, #(#enum_parameters),*).await
+                        Self::handle_protected(dispatcher, permissions, #(#enum_parameters),*).await
                     }
 
                     async fn handle_protected(
                         dispatcher: &Self::Dispatcher,
+                        permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type;
                 }
