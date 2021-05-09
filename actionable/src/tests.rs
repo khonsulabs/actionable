@@ -7,15 +7,15 @@ use crate::{
     ResourceName, Statement,
 };
 
-use crate as actionable; // TODO the Action derive doesn't accept this customization
-
 #[derive(Debug, Action)]
+#[action(actionable = "crate")]
 enum TestActions {
     DoSomething,
     Post(PostActions),
 }
 
 #[derive(Debug, Action)]
+#[action(actionable = "crate")]
 enum PostActions {
     Read,
     Update,

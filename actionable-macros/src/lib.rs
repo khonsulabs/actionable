@@ -20,10 +20,23 @@ mod actionable;
 mod dispatcher;
 
 /// Derives the `actionable::Action` trait.
+///
+/// This trait can be customizd using the `action` attribute in these ways:
+///
+/// * Crate name override: `#[action(actionable = "someothername")]`. If you
+///   find yourself needing to import `actionable` as another name, this setting
+///   will replace all mentions of `actionable` with the identifier specified.
 #[proc_macro_error]
-#[proc_macro_derive(Action)]
+#[proc_macro_derive(Action, attributes(action))]
 pub fn action_derive(input: TokenStream) -> TokenStream {
-    action::derive(input)
+    let input = parse_macro_input!(input as DeriveInput);
+    match action::derive(&input) {
+        Ok(tokens) => tokens.into(),
+        Err(err) => {
+            emit_error!(input.ident, err.to_string());
+            TokenStream::default()
+        }
+    }
 }
 
 /// Derives a set of traits that can be used to implement a permissions-driven

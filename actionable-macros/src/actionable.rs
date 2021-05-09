@@ -247,13 +247,10 @@ impl Variant {
 }
 
 #[derive(Debug, FromField)]
-#[darling(attributes(endpoint))]
 struct Field {
     ident: Option<syn::Ident>,
     ty: syn::Type,
 }
-
-impl Field {}
 
 impl ToTokens for Actionable {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -280,7 +277,7 @@ impl ToTokens for Actionable {
         let generated_dispatcher_name =
             syn::Ident::new(&format!("{}Dispatcher", enum_name), enum_name.span());
 
-        for variant in &enum_data {
+        for variant in enum_data {
             let result = variant.generate_code(
                 enum_name,
                 &generated_dispatcher_name,

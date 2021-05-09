@@ -1,31 +1,63 @@
-use proc_macro::TokenStream;
-use proc_macro_error::{abort, abort_call_site};
+#![allow(clippy::default_trait_access)]
+
+use darling::{ast, FromDeriveInput, FromField, FromVariant, ToTokens};
+use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput};
 
-pub fn derive(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+#[derive(Debug, FromDeriveInput)]
+#[darling(attributes(action), supports(enum_any))]
+struct Action {
+    ident: syn::Ident,
+    vis: syn::Visibility,
+    data: ast::Data<Variant, ()>,
 
-    let name = input.ident;
+    /// Overrides the crate name for `actionable` references.
+    #[darling(default)]
+    actionable: Option<String>,
+}
 
-    let mut fields = Vec::new();
-    match input.data {
-        Data::Enum(data) => {
-            for variant in data.variants.iter() {
+#[derive(Debug, FromVariant)]
+struct Variant {
+    ident: syn::Ident,
+    fields: ast::Fields<Field>,
+}
+
+#[derive(Debug, FromField)]
+struct Field {
+    ident: Option<syn::Ident>,
+    ty: syn::Type,
+}
+
+impl ToTokens for Action {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let name = &self.ident;
+        let enum_data = self
+            .data
+            .as_ref()
+            .take_enum()
+            .expect("Expected enum in data");
+
+        let actionable = self.actionable.as_deref().unwrap_or("actionable");
+        let actionable = syn::Ident::new(actionable, name.span());
+
+        let variants = enum_data.into_iter().map(|variant| {
                 let ident = variant.ident.clone();
                 let ident_as_string = ident.to_string();
                 match variant.fields.len() {
                     0 => {
-                        fields.push(quote! { Self::#ident => actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)]) });
+                        quote! {
+                            Self::#ident => #actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)])
+                        }
                     }
                     1 => {
-                        fields.push(quote! {
+                        quote! {
                             Self::#ident(subaction) => {
                                 let mut name = Action::name(subaction);
                                 name.0.insert(0, ::std::borrow::Cow::Borrowed(#ident_as_string));
                                 name
                             }
-                        });
+                        }
                     }
                     _ => {
                         abort!(
@@ -34,22 +66,23 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         )
                     }
                 }
-            }
-        }
-        _ => abort_call_site!("Action can only be derived for an enum."),
-    }
+            });
 
-    let expanded = quote! {
-        impl Action for #name {
-            fn name(&self) -> actionable::ActionName {
-                match self {
-                    #(
-                        #fields
-                    ),*
+        tokens.extend(quote! {
+            impl Action for #name {
+                fn name(&self) -> #actionable::ActionName {
+                    match self {
+                        #(
+                            #variants
+                        ),*
+                    }
                 }
             }
-        }
-    };
+        })
+    }
+}
 
-    TokenStream::from(expanded)
+pub fn derive(input: &syn::DeriveInput) -> Result<TokenStream, darling::Error> {
+    let actionable = Action::from_derive_input(input)?;
+    Ok(actionable.into_token_stream())
 }
