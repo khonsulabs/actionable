@@ -9,6 +9,7 @@ use quote::quote;
 struct Dispatcher {
     ident: syn::Ident,
     vis: syn::Visibility,
+    generics: syn::Generics,
 
     /// Overrides the crate name for `actionable` references.
     #[darling(default)]
@@ -20,23 +21,26 @@ struct Dispatcher {
 impl ToTokens for Dispatcher {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let type_name = &self.ident;
+        let generics = &self.generics;
         let actionable = self.actionable.as_deref().unwrap_or("actionable");
         let actionable = syn::Ident::new(actionable, type_name.span());
 
-        let enum_name = syn::Ident::new(&self.input, type_name.span());
-        let generated_dispatcher_name =
-            syn::Ident::new(&format!("{}Dispatcher", enum_name), enum_name.span());
+        for name in self.input.split(',').map(str::trim) {
+            let enum_name = syn::Ident::new(name, type_name.span());
+            let generated_dispatcher_name =
+                syn::Ident::new(&format!("{}Dispatcher", enum_name), enum_name.span());
 
-        tokens.extend(quote! {
-            #[#actionable::async_trait]
-            impl #actionable::Dispatcher<#enum_name> for #type_name {
-                type Result = Result<<Self as #generated_dispatcher_name>::Output,<Self as #generated_dispatcher_name>::Error>;
+            tokens.extend(quote! {
+                #[#actionable::async_trait]
+                impl#generics #actionable::Dispatcher<#enum_name> for #type_name#generics {
+                    type Result = Result<<Self as #generated_dispatcher_name>::Output,<Self as #generated_dispatcher_name>::Error>;
 
-                async fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Self::Result {
-                    #generated_dispatcher_name::dispatch_to_handlers(self, permissions, request).await
+                    async fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Self::Result {
+                        #generated_dispatcher_name::dispatch_to_handlers(self, permissions, request).await
+                    }
                 }
-            }
-        })
+            });
+        }
     }
 }
 
