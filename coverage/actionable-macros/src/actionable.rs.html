@@ -22,8 +22,8 @@
         <div class="level-item has-text-centered">
         <div>
             <p class="heading">Functions</p>
-            <p class="title has-text-warning">
-                <abbr title="11 / 13">84.62 %</abbr></p>
+            <p class="title has-text-success">
+                <abbr title="13 / 14">92.86 %</abbr></p>
         </div>
     </div>
 
@@ -3284,7 +3284,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">#[darling(attributes(endpoint))]</pre>
+                <pre class="has-background-white py-0 px-2">struct Field {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3297,7 +3297,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">struct Field {</pre>
+                <pre class="has-background-white py-0 px-2">    ident: Option&lt;syn::Ident&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3310,7 +3310,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    ident: Option&lt;syn::Ident&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    ty: syn::Type,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3323,7 +3323,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    ty: syn::Type,</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3336,7 +3336,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3349,7 +3349,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl ToTokens for Actionable {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3358,11 +3358,11 @@
                 <a href="#256">256</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">impl Field {}</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">    fn to_tokens(&amp;self, tokens: &amp;mut TokenStream) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3371,11 +3371,11 @@
                 <a href="#257">257</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        let enum_name = &amp;self.ident;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3384,11 +3384,11 @@
                 <a href="#258">258</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">impl ToTokens for Actionable {</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        let enum_data = self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3401,7 +3401,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn to_tokens(&amp;self, tokens: &amp;mut TokenStream) {</pre>
+                <pre class="has-background-success-light py-0 px-2">            .data</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3414,7 +3414,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let enum_name = &amp;self.ident;</pre>
+                <pre class="has-background-success-light py-0 px-2">            .as_ref()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3427,7 +3427,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let enum_data = self</pre>
+                <pre class="has-background-success-light py-0 px-2">            .take_enum()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3440,7 +3440,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            .data</pre>
+                <pre class="has-background-success-light py-0 px-2">            .expect(&quot;Expected enum in data&quot;);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3449,11 +3449,11 @@
                 <a href="#263">263</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            .as_ref()</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3466,7 +3466,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            .take_enum()</pre>
+                <pre class="has-background-success-light py-0 px-2">        let pub_tokens = match self.vis {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3479,52 +3479,13 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            .expect(&quot;Expected enum in data&quot;);</pre>
+                <pre class="has-background-success-light py-0 px-2">            syn::Visibility::Public(_) =&gt; quote! { pub },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="266">
                 <a href="#266">266</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
-            </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="267">
-                <a href="#267">267</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let pub_tokens = match self.vis {</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="268">
-                <a href="#268">268</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            syn::Visibility::Public(_) =&gt; quote! { pub },</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="269">
-                <a href="#269">269</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -3536,8 +3497,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="270">
-                <a href="#270">270</a>
+                id="267">
+                <a href="#267">267</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
@@ -3549,8 +3510,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="271">
-                <a href="#271">271</a>
+                id="268">
+                <a href="#268">268</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -3562,8 +3523,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="272">
-                <a href="#272">272</a>
+                id="269">
+                <a href="#269">269</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -3571,6 +3532,45 @@
             </div>
             <div class="column has-background-white p-0">
                 <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="270">
+                <a href="#270">270</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
+            </div>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        let actionable = self.actionable.as_deref().unwrap_or(&quot;actionable&quot;);</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="271">
+                <a href="#271">271</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
+            </div>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        let actionable = syn::Ident::new(actionable, enum_name.span());</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="272">
+                <a href="#272">272</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
+            </div>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3583,7 +3583,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let actionable = self.actionable.as_deref().unwrap_or(&quot;actionable&quot;);</pre>
+                <pre class="has-background-success-light py-0 px-2">        let mut handlers = Vec::new();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3596,7 +3596,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let actionable = syn::Ident::new(actionable, enum_name.span());</pre>
+                <pre class="has-background-success-light py-0 px-2">        let mut associated_types = Vec::new();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3609,7 +3609,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        let mut match_cases = Vec::new();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3622,7 +3622,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let mut handlers = Vec::new();</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3635,7 +3635,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let mut associated_types = Vec::new();</pre>
+                <pre class="has-background-success-light py-0 px-2">        let generated_dispatcher_name =</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3648,7 +3648,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let mut match_cases = Vec::new();</pre>
+                <pre class="has-background-success-light py-0 px-2">            syn::Ident::new(&amp;format!(&quot;{}Dispatcher&quot;, enum_name), enum_name.span());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3657,11 +3657,11 @@
                 <a href="#279">279</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3671,10 +3671,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let generated_dispatcher_name =</pre>
+                <pre class="has-background-success-light py-0 px-2">        for variant in enum_data {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3684,10 +3684,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            syn::Ident::new(&amp;format!(&quot;{}Dispatcher&quot;, enum_name), enum_name.span());</pre>
+                <pre class="has-background-success-light py-0 px-2">            let result = variant.generate_code(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3696,11 +3696,11 @@
                 <a href="#282">282</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                12
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                enum_name,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3713,7 +3713,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        for variant in &amp;enum_data {</pre>
+                <pre class="has-background-success-light py-0 px-2">                &amp;generated_dispatcher_name,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3726,7 +3726,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let result = variant.generate_code(</pre>
+                <pre class="has-background-success-light py-0 px-2">                &amp;pub_tokens,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3739,7 +3739,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                enum_name,</pre>
+                <pre class="has-background-success-light py-0 px-2">                &amp;actionable,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3752,7 +3752,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                &amp;generated_dispatcher_name,</pre>
+                <pre class="has-background-success-light py-0 px-2">            );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3765,7 +3765,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                &amp;pub_tokens,</pre>
+                <pre class="has-background-success-light py-0 px-2">            handlers.push(result.handler);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3778,7 +3778,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                &amp;actionable,</pre>
+                <pre class="has-background-success-light py-0 px-2">            associated_types.push(result.associated_type);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3791,7 +3791,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            );</pre>
+                <pre class="has-background-success-light py-0 px-2">            match_cases.push(result.match_case);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3804,7 +3804,7 @@
                 12
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            handlers.push(result.handler);</pre>
+                <pre class="has-background-success-light py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3813,11 +3813,11 @@
                 <a href="#291">291</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                12
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            associated_types.push(result.associated_type);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3827,10 +3827,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                12
+                14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            match_cases.push(result.match_case);</pre>
+                <pre class="has-background-success-light py-0 px-2">        tokens.extend(quote! {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3840,10 +3840,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                12
+                14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        }</pre>
+                <pre class="has-background-success-light py-0 px-2">            #[#actionable::async_trait]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3852,11 +3852,11 @@
                 <a href="#294">294</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                14
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">            #[doc(hidden)]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3869,7 +3869,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        tokens.extend(quote! {</pre>
+                <pre class="has-background-success-light py-0 px-2">            #pub_tokens trait #generated_dispatcher_name: Send + Sync {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3882,7 +3882,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            #[#actionable::async_trait]</pre>
+                <pre class="has-background-success-light py-0 px-2">                type Output: Send + Sync;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3895,7 +3895,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            #[doc(hidden)]</pre>
+                <pre class="has-background-success-light py-0 px-2">                type Error: From&lt;#actionable::PermissionDenied&gt; + Send + Sync;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3908,7 +3908,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            #pub_tokens trait #generated_dispatcher_name: Send + Sync {</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3921,7 +3921,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                type Output: Send + Sync;</pre>
+                <pre class="has-background-success-light py-0 px-2">                #(#associated_types)*</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3934,7 +3934,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                type Error: From&lt;#actionable::PermissionDenied&gt; + Send + Sync;</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3947,7 +3947,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">                async fn dispatch_to_handlers(&amp;self, permissions: &amp;#actionable::Permissions, request: #enum_name) -&gt; Result&lt;Self::Output, Self::Error&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3960,7 +3960,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                #(#associated_types)*</pre>
+                <pre class="has-background-success-light py-0 px-2">                    match request {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3973,7 +3973,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">                        #(#match_cases)*</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3986,7 +3986,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                async fn dispatch_to_handlers(&amp;self, permissions: &amp;#actionable::Permissions, request: #enum_name) -&gt; Result&lt;Self::Output, Self::Error&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3999,7 +3999,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    match request {</pre>
+                <pre class="has-background-success-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4012,7 +4012,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        #(#match_cases)*</pre>
+                <pre class="has-background-success-light py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4025,7 +4025,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    }</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4038,7 +4038,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                }</pre>
+                <pre class="has-background-success-light py-0 px-2">            #(#handlers)*</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4051,7 +4051,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            }</pre>
+                <pre class="has-background-success-light py-0 px-2">        })</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4061,10 +4061,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                14
+                2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4073,11 +4073,11 @@
                 <a href="#311">311</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                14
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            #(#handlers)*</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4086,11 +4086,11 @@
                 <a href="#312">312</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                14
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        })</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4103,7 +4103,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">pub fn derive(input: &amp;syn::DeriveInput) -&gt; Result&lt;TokenStream, darling::Error&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4112,11 +4112,11 @@
                 <a href="#314">314</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">}</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">    let actionable = Actionable::from_derive_input(input)?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4125,11 +4125,11 @@
                 <a href="#315">315</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">    Ok(actionable.into_token_stream())</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4142,51 +4142,12 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">pub fn derive(input: &amp;syn::DeriveInput) -&gt; Result&lt;TokenStream, darling::Error&gt; {</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="317">
-                <a href="#317">317</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    let actionable = Actionable::from_derive_input(input)?;</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="318">
-                <a href="#318">318</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    Ok(actionable.into_token_stream())</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="319">
-                <a href="#319">319</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">}</pre>
             </div>
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-05-09 21:32</p>
+                <p class="heading">Date: 2021-05-09 22:41</p>
             </div>
         </footer>
     </body>
