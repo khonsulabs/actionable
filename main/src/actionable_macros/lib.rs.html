@@ -194,6 +194,37 @@
 <span id="191">191</span>
 <span id="192">192</span>
 <span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Macros for the `actionable` API framework.</span>
 
@@ -214,6 +245,7 @@
 
 <span class="kw">mod</span> <span class="ident">action</span>;
 <span class="kw">mod</span> <span class="ident">actionable</span>;
+<span class="kw">mod</span> <span class="ident">dispatcher</span>;
 
 <span class="doccomment">/// Derives the `actionable::Action` trait.</span>
 <span class="attribute">#[<span class="ident">proc_macro_error</span>]</span>
@@ -268,7 +300,7 @@
 <span class="doccomment">/// ```rust</span>
 <span class="doccomment">/// # type Output = ();</span>
 <span class="doccomment">/// # type Error = ();</span>
-<span class="doccomment">/// # use actionable::{Permissions, async_trait::async_trait};</span>
+<span class="doccomment">/// # use actionable::{Permissions, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
 <span class="doccomment">///    type Dispatcher;</span>
@@ -291,7 +323,7 @@
 <span class="doccomment">/// ```rust</span>
 <span class="doccomment">/// # type Output = ();</span>
 <span class="doccomment">/// # type Error = ();</span>
-<span class="doccomment">/// # use actionable::{Permissions, ResourceName, async_trait::async_trait};</span>
+<span class="doccomment">/// # use actionable::{Permissions, ResourceName, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
 <span class="doccomment">///    type Dispatcher;</span>
@@ -321,12 +353,13 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// ### Custom Protection: `#[actionable(protection = &quot;custom&quot;)]`</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// A handler with custom protection has two methods, one to verify permissions and one to execute the protected code:</span>
+<span class="doccomment">/// A handler with custom protection has two methods, one to verify permissions</span>
+<span class="doccomment">/// and one to execute the protected code:</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```rust</span>
 <span class="doccomment">/// # type Output = ();</span>
 <span class="doccomment">/// # type Error = ();</span>
-<span class="doccomment">/// # use actionable::{Permissions, async_trait::async_trait};</span>
+<span class="doccomment">/// # use actionable::{Permissions, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
 <span class="doccomment">///    type Dispatcher;</span>
@@ -336,10 +369,13 @@
 <span class="doccomment">///        /* each field on this variant is passed</span>
 <span class="doccomment">///           by refrence as a parameter to this method */</span>
 <span class="doccomment">///    ) -&gt; Result&lt;(), Error&gt;;</span>
-
-<span class="doccomment">///    async fn handle_protected(dispatcher: &amp;Self::Dispatcher, permissions:</span>
-<span class="doccomment">///        &amp;Permissions, /* each field on this variant is passed as a parameter</span>
-<span class="doccomment">///        to this method */) -&gt; Result&lt;Output, Error&gt;;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///    async fn handle_protected(</span>
+<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///        permissions: &amp;Permissions,</span>
+<span class="doccomment">///        /* each field on this variant is passed as a parameter</span>
+<span class="doccomment">///        to this method */</span>
+<span class="doccomment">///    ) -&gt; Result&lt;Output, Error&gt;;</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
@@ -381,6 +417,32 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">actionable_derive</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input</span><span class="macro">!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
     <span class="kw">match</span> <span class="ident">actionable</span>::<span class="ident">derive</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">tokens</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tokens</span>.<span class="ident">into</span>(),
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">emit_error</span><span class="macro">!</span>(<span class="ident">input</span>.<span class="ident">ident</span>, <span class="ident">err</span>.<span class="ident">to_string</span>());
+            <span class="ident">TokenStream</span>::<span class="ident">default</span>()
+        }
+    }
+}
+
+<span class="doccomment">/// Derives the `Dispatcher` trait.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait requires the `input` parameter to be specified. The full list of</span>
+<span class="doccomment">/// parameters that can be customized are:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `input` Type: `#[dispatcher(input = &quot;EnumName&quot;)]`. The enum name here</span>
+<span class="doccomment">///   needs to have had [`Actionable`] derived on it.</span>
+<span class="doccomment">/// * Crate name override: `#[actionable(actionable = &quot;someothername&quot;)]`. If you</span>
+<span class="doccomment">///   find yourself needing to import `actionable` as another name, this setting</span>
+<span class="doccomment">///   will replace all mentions of `actionable` with the identifier specified.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The `input` type must be in scope, as do the derived traits generated by</span>
+<span class="doccomment">/// deriving `Actionable`.</span>
+<span class="attribute">#[<span class="ident">proc_macro_error</span>]</span>
+<span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="ident">Dispatcher</span>, <span class="ident">attributes</span>(<span class="ident">dispatcher</span>))]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dispatcher_derive</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
+    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input</span><span class="macro">!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
+    <span class="kw">match</span> <span class="ident">dispatcher</span>::<span class="ident">derive</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
         <span class="prelude-val">Ok</span>(<span class="ident">tokens</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tokens</span>.<span class="ident">into</span>(),
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="macro">emit_error</span><span class="macro">!</span>(<span class="ident">input</span>.<span class="ident">ident</span>, <span class="ident">err</span>.<span class="ident">to_string</span>());
