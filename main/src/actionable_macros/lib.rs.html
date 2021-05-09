@@ -225,6 +225,19 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Macros for the `actionable` API framework.</span>
 
@@ -248,10 +261,23 @@
 <span class="kw">mod</span> <span class="ident">dispatcher</span>;
 
 <span class="doccomment">/// Derives the `actionable::Action` trait.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait can be customizd using the `action` attribute in these ways:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * Crate name override: `#[action(actionable = &quot;someothername&quot;)]`. If you</span>
+<span class="doccomment">///   find yourself needing to import `actionable` as another name, this setting</span>
+<span class="doccomment">///   will replace all mentions of `actionable` with the identifier specified.</span>
 <span class="attribute">#[<span class="ident">proc_macro_error</span>]</span>
-<span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="ident">Action</span>)]</span>
+<span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="ident">Action</span>, <span class="ident">attributes</span>(<span class="ident">action</span>))]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">action_derive</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
-    <span class="ident">action</span>::<span class="ident">derive</span>(<span class="ident">input</span>)
+    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input</span><span class="macro">!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
+    <span class="kw">match</span> <span class="ident">action</span>::<span class="ident">derive</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">tokens</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tokens</span>.<span class="ident">into</span>(),
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">emit_error</span><span class="macro">!</span>(<span class="ident">input</span>.<span class="ident">ident</span>, <span class="ident">err</span>.<span class="ident">to_string</span>());
+            <span class="ident">TokenStream</span>::<span class="ident">default</span>()
+        }
+    }
 }
 
 <span class="doccomment">/// Derives a set of traits that can be used to implement a permissions-driven</span>
