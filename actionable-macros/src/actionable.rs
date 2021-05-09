@@ -204,7 +204,7 @@ impl Variant {
             parameters: handle_parameters,
             tokens: quote_spanned! {
                 variant_name.span() =>
-                    #[#actionable::async_trait::async_trait]
+                    #[#actionable::async_trait]
                     #[doc(hidden)]
                     #pub_tokens trait #handler_name: Send + Sync {
                         type Dispatcher: #generated_dispatcher_name;
@@ -293,7 +293,7 @@ impl ToTokens for Actionable {
         }
 
         tokens.extend(quote! {
-            #[#actionable::async_trait::async_trait]
+            #[#actionable::async_trait]
             #[doc(hidden)]
             #pub_tokens trait #generated_dispatcher_name: Send + Sync {
                 type Output: Send + Sync;
@@ -301,7 +301,7 @@ impl ToTokens for Actionable {
 
                 #(#associated_types)*
 
-                async fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Result<Self::Output, Self::Error> {
+                async fn dispatch_to_handlers(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Result<Self::Output, Self::Error> {
                     match request {
                         #(#match_cases)*
                     }
@@ -309,18 +309,6 @@ impl ToTokens for Actionable {
             }
 
             #(#handlers)*
-
-
-            // impl actionable::Dispatcher for #self.ident {
-            //     //     async fn act(input: Self) {
-            //     //         match input {
-            //     //             Self::<variant> => Foo::Handler.handle(Foo::Handler::new(), permissions)
-            //     //         }
-            //     //     }
-            //     // }
-            // }
-
-            // #(#handlers)*
         })
     }
 }

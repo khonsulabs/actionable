@@ -87,6 +87,7 @@
 #![cfg_attr(doc, deny(rustdoc))]
 
 mod action;
+mod dispatcher;
 mod permissions;
 mod statement;
 
@@ -94,20 +95,21 @@ use serde::{Deserialize, Serialize};
 
 pub use self::{
     action::{Action, ActionName},
+    dispatcher::Dispatcher,
     permissions::Permissions,
     statement::{ActionNameList, Identifier, ResourceName, Statement},
 };
 
 pub use actionable_macros::Actionable;
 #[doc(hidden)]
-pub use async_trait;
+pub use async_trait::async_trait;
 
 #[cfg(test)]
 mod tests;
 
 /// An `action` was denied.
 #[derive(thiserror::Error, Clone, Debug, Serialize, Deserialize)]
-#[error("Action '{action}' was denied on resource'{resource}'")]
+#[error("Action '{action}' was denied on resource '{resource}'")]
 pub struct PermissionDenied {
     /// The resource that `action` was attempted upon.
     pub resource: ResourceName<'static>,

@@ -1,4 +1,6 @@
-use actionable::{Action, ActionNameList, Actionable, Permissions, ResourceName, Statement};
+use actionable::{
+    Action, ActionNameList, Actionable, Dispatcher, Permissions, ResourceName, Statement,
+};
 use async_trait::async_trait;
 use std::{
     io::{self, BufRead},
@@ -47,12 +49,14 @@ enum ApiActions {
 }
 
 /// This type contains the state of the "server": a list of users.
-struct Dispatcher {
+#[derive(Dispatcher, Debug)]
+#[dispatcher(input = "ApiRequest")]
+struct Server {
     users: Arc<Mutex<Vec<String>>>,
 }
 
 /// This is the implementation of the dispatcher for `ApiRequest`.
-impl ApiRequestDispatcher for Dispatcher {
+impl ApiRequestDispatcher for Server {
     type Output = ApiResponse;
     type Error = anyhow::Error;
 
@@ -63,7 +67,7 @@ impl ApiRequestDispatcher for Dispatcher {
 
 /// Handles `ApiRequest::ListUsers`
 #[async_trait]
-impl ListUsersHandler for Dispatcher {
+impl ListUsersHandler for Server {
     type Dispatcher = Self;
 
     async fn handle(dispatcher: &Self, _permissions: &Permissions) -> anyhow::Result<ApiResponse> {
@@ -79,7 +83,7 @@ impl ListUsersHandler for Dispatcher {
 
 /// Handles `ApiRequest::AddUser`
 #[async_trait]
-impl AddUserHandler for Dispatcher {
+impl AddUserHandler for Server {
     type Dispatcher = Self;
 
     async fn verify_permissions(
@@ -113,7 +117,7 @@ impl AddUserHandler for Dispatcher {
 
 /// Handles `ApiRequest::DeleteUser`
 #[async_trait]
-impl DeleteUserHandler for Dispatcher {
+impl DeleteUserHandler for Server {
     type Dispatcher = Self;
     type Action = ApiActions;
 
@@ -178,8 +182,8 @@ async fn main() -> anyhow::Result<()> {
         allowed: true,
     }]);
 
-    // Create our dispatcher, which is the "server" in this example.
-    let dispatcher = Dispatcher {
+    // Create our dispatcher, which is the server in this example.
+    let dispatcher = Server {
         users: Arc::new(Mutex::new(users)),
     };
 

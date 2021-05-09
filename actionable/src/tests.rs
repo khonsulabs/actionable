@@ -3,8 +3,8 @@
 use std::borrow::Cow;
 
 use crate::{
-    Action, ActionName, ActionNameList, Actionable, PermissionDenied, Permissions, ResourceName,
-    Statement,
+    Action, ActionName, ActionNameList, Actionable, Dispatcher, PermissionDenied, Permissions,
+    ResourceName, Statement,
 };
 
 use crate as actionable; // TODO the Action derive doesn't accept this customization
@@ -105,10 +105,12 @@ enum Request {
     CustomProtectedStructParameter { value: u64 },
 }
 
-struct Dispatcher;
+#[derive(Dispatcher, Debug)]
+#[dispatcher(input = "Request", actionable = "crate")]
+struct TestDispatcher;
 
 #[async_trait::async_trait]
-impl RequestDispatcher for Dispatcher {
+impl RequestDispatcher for TestDispatcher {
     type Output = Option<u64>;
     type Error = TestError;
 
@@ -134,7 +136,7 @@ pub enum TestError {
 }
 
 #[async_trait::async_trait]
-impl UnprotectedEnumParameterHandler for Dispatcher {
+impl UnprotectedEnumParameterHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn handle(
@@ -147,7 +149,7 @@ impl UnprotectedEnumParameterHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl UnprotectedStructParameterHandler for Dispatcher {
+impl UnprotectedStructParameterHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn handle(
@@ -160,7 +162,7 @@ impl UnprotectedStructParameterHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl UnprotectedNoParametersHandler for Dispatcher {
+impl UnprotectedNoParametersHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn handle(
@@ -172,7 +174,7 @@ impl UnprotectedNoParametersHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl SimplyProtectedEnumParameterHandler for Dispatcher {
+impl SimplyProtectedEnumParameterHandler for TestDispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
@@ -194,7 +196,7 @@ impl SimplyProtectedEnumParameterHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl SimplyProtectedStructParameterHandler for Dispatcher {
+impl SimplyProtectedStructParameterHandler for TestDispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
@@ -216,7 +218,7 @@ impl SimplyProtectedStructParameterHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl SimplyProtectedNoParametersHandler for Dispatcher {
+impl SimplyProtectedNoParametersHandler for TestDispatcher {
     type Dispatcher = Self;
     type Action = TestActions;
 
@@ -237,7 +239,7 @@ impl SimplyProtectedNoParametersHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl CustomProtectedNoParametersHandler for Dispatcher {
+impl CustomProtectedNoParametersHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn verify_permissions(
@@ -260,7 +262,7 @@ impl CustomProtectedNoParametersHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl CustomProtectedEnumParameterHandler for Dispatcher {
+impl CustomProtectedEnumParameterHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn verify_permissions(
@@ -285,7 +287,7 @@ impl CustomProtectedEnumParameterHandler for Dispatcher {
 }
 
 #[async_trait::async_trait]
-impl CustomProtectedStructParameterHandler for Dispatcher {
+impl CustomProtectedStructParameterHandler for TestDispatcher {
     type Dispatcher = Self;
 
     async fn verify_permissions(
@@ -316,7 +318,7 @@ async fn example() {
         actions: ActionNameList::All,
         allowed: true,
     }]);
-    let dispatcher = Dispatcher;
+    let dispatcher = TestDispatcher;
 
     // All success (permitted) cases
     assert_eq!(
