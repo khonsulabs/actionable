@@ -2,6 +2,7 @@
 
 use darling::{ast, FromDeriveInput, FromField, FromMeta, FromVariant, ToTokens};
 use proc_macro2::TokenStream;
+use proc_macro_error::abort;
 use quote::{quote, quote_spanned};
 
 #[derive(Debug, FromDeriveInput)]
@@ -36,14 +37,24 @@ struct Variant {
     fields: ast::Fields<Field>,
 
     protection: Protection,
+    #[darling(default)]
+    subaction: bool,
 }
 
 struct VariantResult {
-    handler: TokenStream,
-    associated_type: TokenStream,
+    handler: VariantHandler,
     match_case: TokenStream,
 }
 
+enum VariantHandler {
+    Subaction,
+    Handler {
+        handler: TokenStream,
+        associated_type: TokenStream,
+    },
+}
+
+#[derive(Default)]
 struct Handler {
     tokens: TokenStream,
     parameters: Vec<syn::Ident>,
@@ -60,8 +71,6 @@ impl Variant {
         let variant_name = &self.ident;
         let handler_name =
             syn::Ident::new(&format!("{}Handler", variant_name), variant_name.span());
-
-        let associated_type = quote_spanned! {variant_name.span() => type #handler_name: #handler_name<Dispatcher = Self>;};
 
         let mut method_parameters = Vec::new();
         let mut byref_method_parameters = Vec::new();
@@ -86,15 +95,23 @@ impl Variant {
             enum_parameters.push(arg_name);
         }
 
-        let handler = self.generate_handler(
-            &handler_name,
-            generated_dispatcher_name,
-            &enum_parameters,
-            &method_parameters,
-            &byref_method_parameters,
-            pub_tokens,
-            actionable,
-        );
+        let handler = if self.subaction {
+            if self.fields.len() != 1 {
+                abort!(self.ident, "subactions should only have one field")
+            }
+
+            Handler::default()
+        } else {
+            self.generate_handler(
+                &handler_name,
+                generated_dispatcher_name,
+                &enum_parameters,
+                &method_parameters,
+                &byref_method_parameters,
+                pub_tokens,
+                actionable,
+            )
+        };
 
         let match_case = self.generate_match_case(
             is_struct_style,
@@ -104,9 +121,19 @@ impl Variant {
             enum_name,
         );
 
+        let handler = if self.subaction {
+            VariantHandler::Subaction
+        } else {
+            let associated_type = quote_spanned! {variant_name.span() => type #handler_name: #handler_name<Dispatcher = Self>;};
+
+            VariantHandler::Handler {
+                handler: handler.tokens,
+                associated_type,
+            }
+        };
+
         VariantResult {
-            handler: handler.tokens,
-            associated_type,
+            handler,
             match_case,
         }
     }
@@ -224,7 +251,13 @@ impl Variant {
         enum_name: &syn::Ident,
     ) -> TokenStream {
         let variant_name = &self.ident;
-        if is_struct_style {
+        if self.subaction {
+            quote_spanned! {
+                variant_name.span() => #enum_name::#variant_name(arg0) => {
+                    self.handle_subaction(permissions, #(#enum_parameters),*).await
+                },
+            }
+        } else if is_struct_style {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name{#(#enum_parameters),*} => {
                     Self::#handler_name::handle(#(#handle_parameters),*).await
@@ -277,6 +310,8 @@ impl ToTokens for Actionable {
         let generated_dispatcher_name =
             syn::Ident::new(&format!("{}Dispatcher", enum_name), enum_name.span());
 
+        let mut subaction = false;
+
         for variant in enum_data {
             let result = variant.generate_code(
                 enum_name,
@@ -284,10 +319,35 @@ impl ToTokens for Actionable {
                 &pub_tokens,
                 &actionable,
             );
-            handlers.push(result.handler);
-            associated_types.push(result.associated_type);
+            match result.handler {
+                VariantHandler::Subaction => {
+                    if subaction {
+                        abort!(self.ident, "only one subaction is allowed")
+                    }
+                    subaction = true
+                }
+                VariantHandler::Handler {
+                    handler,
+                    associated_type,
+                } => {
+                    handlers.push(handler);
+                    associated_types.push(associated_type);
+                }
+            }
             match_cases.push(result.match_case);
         }
+
+        let (subaction_type, subaction_handler) = if subaction {
+            (
+                quote!(<Self::Subaction>),
+                quote! {
+                    type Subaction: Send;
+                    async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+                },
+            )
+        } else {
+            (TokenStream::default(), TokenStream::default())
+        };
 
         tokens.extend(quote! {
             #[#actionable::async_trait]
@@ -298,11 +358,13 @@ impl ToTokens for Actionable {
 
                 #(#associated_types)*
 
-                async fn dispatch_to_handlers(&self, permissions: &#actionable::Permissions, request: #enum_name) -> Result<Self::Output, Self::Error> {
+                async fn dispatch_to_handlers(&self, permissions: &#actionable::Permissions, request: #enum_name#subaction_type) -> Result<Self::Output, Self::Error> {
                     match request {
                         #(#match_cases)*
                     }
                 }
+
+                #subaction_handler
             }
 
             #(#handlers)*

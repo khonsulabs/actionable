@@ -311,6 +311,48 @@ impl CustomProtectedStructParameterHandler for TestDispatcher {
     }
 }
 
+#[derive(Actionable, Debug)]
+#[actionable(actionable = "crate")]
+enum GenericRequest<T> {
+    #[actionable(protection = "none")]
+    NonGeneric,
+    #[actionable(protection = "none", subaction)]
+    Sub(T),
+}
+
+#[derive(Dispatcher, Debug)]
+#[dispatcher(input = "GenericRequest<Request>", actionable = "crate")]
+struct GenericDispatcher;
+
+#[async_trait::async_trait]
+impl GenericRequestDispatcher for GenericDispatcher {
+    type Output = Option<u64>;
+    type Error = TestError;
+    type Subaction = Request;
+
+    type NonGenericHandler = Self;
+
+    async fn handle_subaction(
+        &self,
+        permissions: &Permissions,
+        subaction: Request,
+    ) -> Result<Option<u64>, TestError> {
+        TestDispatcher.dispatch(permissions, subaction).await
+    }
+}
+
+#[async_trait::async_trait]
+impl NonGenericHandler for GenericDispatcher {
+    type Dispatcher = Self;
+
+    async fn handle(
+        dispatcher: &Self,
+        permissions: &Permissions,
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(52))
+    }
+}
+
 #[tokio::test]
 async fn example() {
     let permissions = Permissions::from(vec![Statement {
@@ -379,6 +421,23 @@ async fn example() {
             .unwrap(),
         Some(42)
     );
+
+    // Generic dispatching
+    assert!(matches!(
+        GenericDispatcher
+            .dispatch(&permissions, GenericRequest::NonGeneric,)
+            .await,
+        Ok(Some(52))
+    ));
+    assert!(matches!(
+        GenericDispatcher
+            .dispatch(
+                &permissions,
+                GenericRequest::Sub(Request::CustomProtectedEnumParameter(42)),
+            )
+            .await,
+        Ok(Some(42))
+    ));
 
     // Permission denied errors
     assert!(matches!(

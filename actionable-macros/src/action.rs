@@ -10,6 +10,7 @@ use quote::quote;
 struct Action {
     ident: syn::Ident,
     vis: syn::Visibility,
+    generics: syn::Generics,
     data: ast::Data<Variant, ()>,
 
     /// Overrides the crate name for `actionable` references.
@@ -40,6 +41,7 @@ impl ToTokens for Action {
 
         let actionable = self.actionable.as_deref().unwrap_or("actionable");
         let actionable = syn::Ident::new(actionable, name.span());
+        let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
         let variants = enum_data.into_iter().map(|variant| {
                 let ident = variant.ident.clone();
@@ -69,7 +71,7 @@ impl ToTokens for Action {
             });
 
         tokens.extend(quote! {
-            impl Action for #name {
+            impl#impl_generics Action for #name#type_generics #where_clause {
                 fn name(&self) -> #actionable::ActionName {
                     match self {
                         #(
