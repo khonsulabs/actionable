@@ -61,7 +61,6 @@ impl ToTokens for Dispatcher {
 
         let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
-        // TODO switch to hand-parsing the helper attribute so that this doesn't need to be a string.
         for enum_type in &args.inputs {
             let generated_dispatcher_name = syn::Ident::new(
                 &format!("{}Dispatcher", enum_type.segments.last().unwrap().ident),

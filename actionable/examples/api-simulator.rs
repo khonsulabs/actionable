@@ -59,19 +59,13 @@ struct Server {
 impl ApiRequestDispatcher for Server {
     type Output = ApiResponse;
     type Error = anyhow::Error;
-
-    type ListUsersHandler = Self;
-    type AddUserHandler = Self;
-    type DeleteUserHandler = Self;
 }
 
 /// Handles `ApiRequest::ListUsers`
 #[async_trait]
 impl ListUsersHandler for Server {
-    type Dispatcher = Self;
-
-    async fn handle(dispatcher: &Self, _permissions: &Permissions) -> anyhow::Result<ApiResponse> {
-        let users = dispatcher.users.lock().await;
+    async fn handle(&self, _permissions: &Permissions) -> anyhow::Result<ApiResponse> {
+        let users = self.users.lock().await;
         println!("Current users:");
         for user in users.iter() {
             println!("{}", user)
@@ -84,10 +78,8 @@ impl ListUsersHandler for Server {
 /// Handles `ApiRequest::AddUser`
 #[async_trait]
 impl AddUserHandler for Server {
-    type Dispatcher = Self;
-
     async fn verify_permissions(
-        _dispatcher: &Self::Dispatcher,
+        &self,
         permissions: &Permissions,
         username: &String,
     ) -> anyhow::Result<()> {
@@ -103,11 +95,11 @@ impl AddUserHandler for Server {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<ApiResponse> {
-        let mut users = dispatcher.users.lock().await;
+        let mut users = self.users.lock().await;
         users.push(username);
         users.sort();
         println!("User added.");
@@ -118,10 +110,9 @@ impl AddUserHandler for Server {
 /// Handles `ApiRequest::DeleteUser`
 #[async_trait]
 impl DeleteUserHandler for Server {
-    type Dispatcher = Self;
     type Action = ApiActions;
 
-    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, username: &'a String) -> ResourceName<'a> {
+    fn resource_name<'a>(&'a self, username: &'a String) -> ResourceName<'a> {
         ResourceName::named(username.clone())
     }
 
@@ -130,11 +121,11 @@ impl DeleteUserHandler for Server {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<ApiResponse> {
-        let mut users = dispatcher.users.lock().await;
+        let mut users = self.users.lock().await;
         let old_len = users.len();
         users.retain(|u| u != &username);
 

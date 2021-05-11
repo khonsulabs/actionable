@@ -113,18 +113,6 @@ struct TestDispatcher;
 impl RequestDispatcher for TestDispatcher {
     type Output = Option<u64>;
     type Error = TestError;
-
-    type UnprotectedNoParametersHandler = Self;
-    type UnprotectedEnumParameterHandler = Self;
-    type UnprotectedStructParameterHandler = Self;
-
-    type SimplyProtectedNoParametersHandler = Self;
-    type SimplyProtectedEnumParameterHandler = Self;
-    type SimplyProtectedStructParameterHandler = Self;
-
-    type CustomProtectedNoParametersHandler = Self;
-    type CustomProtectedEnumParameterHandler = Self;
-    type CustomProtectedStructParameterHandler = Self;
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -137,10 +125,8 @@ pub enum TestError {
 
 #[async_trait::async_trait]
 impl UnprotectedEnumParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
-
     async fn handle(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         arg1: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -150,10 +136,8 @@ impl UnprotectedEnumParameterHandler for TestDispatcher {
 
 #[async_trait::async_trait]
 impl UnprotectedStructParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
-
     async fn handle(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         value: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -163,22 +147,16 @@ impl UnprotectedStructParameterHandler for TestDispatcher {
 
 #[async_trait::async_trait]
 impl UnprotectedNoParametersHandler for TestDispatcher {
-    type Dispatcher = Self;
-
-    async fn handle(
-        dispatcher: &Self::Dispatcher,
-        _permissions: &Permissions,
-    ) -> Result<Option<u64>, TestError> {
+    async fn handle(&self, _permissions: &Permissions) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
 
 #[async_trait::async_trait]
 impl SimplyProtectedEnumParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, arg1: &'a u64) -> ResourceName<'a> {
+    fn resource_name<'a>(&'a self, arg1: &'a u64) -> ResourceName<'a> {
         ResourceName::named(*arg1)
     }
 
@@ -187,7 +165,7 @@ impl SimplyProtectedEnumParameterHandler for TestDispatcher {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         arg1: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -197,10 +175,9 @@ impl SimplyProtectedEnumParameterHandler for TestDispatcher {
 
 #[async_trait::async_trait]
 impl SimplyProtectedStructParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name<'a>(_dispatcher: &Self::Dispatcher, arg1: &'a u64) -> ResourceName<'a> {
+    fn resource_name<'a>(&self, arg1: &'a u64) -> ResourceName<'a> {
         ResourceName::named(*arg1)
     }
 
@@ -209,7 +186,7 @@ impl SimplyProtectedStructParameterHandler for TestDispatcher {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         value: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -219,10 +196,9 @@ impl SimplyProtectedStructParameterHandler for TestDispatcher {
 
 #[async_trait::async_trait]
 impl SimplyProtectedNoParametersHandler for TestDispatcher {
-    type Dispatcher = Self;
     type Action = TestActions;
 
-    fn resource_name(_dispatcher: &Self::Dispatcher) -> ResourceName<'static> {
+    fn resource_name(&self) -> ResourceName<'static> {
         ResourceName::named(0)
     }
 
@@ -230,22 +206,14 @@ impl SimplyProtectedNoParametersHandler for TestDispatcher {
         TestActions::DoSomething
     }
 
-    async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
-        _permissions: &Permissions,
-    ) -> Result<Option<u64>, TestError> {
+    async fn handle_protected(&self, _permissions: &Permissions) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
 
 #[async_trait::async_trait]
 impl CustomProtectedNoParametersHandler for TestDispatcher {
-    type Dispatcher = Self;
-
-    async fn verify_permissions(
-        _dispatcher: &Self,
-        permissions: &Permissions,
-    ) -> Result<(), TestError> {
+    async fn verify_permissions(&self, permissions: &Permissions) -> Result<(), TestError> {
         if permissions.allowed_to(&ResourceName::named(0), &TestActions::DoSomething) {
             Ok(())
         } else {
@@ -253,20 +221,15 @@ impl CustomProtectedNoParametersHandler for TestDispatcher {
         }
     }
 
-    async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
-        _permissions: &Permissions,
-    ) -> Result<Option<u64>, TestError> {
+    async fn handle_protected(&self, _permissions: &Permissions) -> Result<Option<u64>, TestError> {
         Ok(None)
     }
 }
 
 #[async_trait::async_trait]
 impl CustomProtectedEnumParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
-
     async fn verify_permissions(
-        _dispatcher: &Self,
+        &self,
         permissions: &Permissions,
         arg1: &u64,
     ) -> Result<(), TestError> {
@@ -278,7 +241,7 @@ impl CustomProtectedEnumParameterHandler for TestDispatcher {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         arg1: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -288,10 +251,8 @@ impl CustomProtectedEnumParameterHandler for TestDispatcher {
 
 #[async_trait::async_trait]
 impl CustomProtectedStructParameterHandler for TestDispatcher {
-    type Dispatcher = Self;
-
     async fn verify_permissions(
-        _dispatcher: &Self,
+        &self,
         permissions: &Permissions,
         arg1: &u64,
     ) -> Result<(), TestError> {
@@ -303,7 +264,7 @@ impl CustomProtectedStructParameterHandler for TestDispatcher {
     }
 
     async fn handle_protected(
-        dispatcher: &Self::Dispatcher,
+        &self,
         _permissions: &Permissions,
         value: u64,
     ) -> Result<Option<u64>, TestError> {
@@ -333,8 +294,6 @@ impl GenericRequestDispatcher for GenericDispatcher {
     type Error = TestError;
     type Subaction = Request;
 
-    type NonGenericHandler = Self;
-
     async fn handle_subaction(
         &self,
         permissions: &Permissions,
@@ -346,12 +305,7 @@ impl GenericRequestDispatcher for GenericDispatcher {
 
 #[async_trait::async_trait]
 impl NonGenericHandler for GenericDispatcher {
-    type Dispatcher = Self;
-
-    async fn handle(
-        dispatcher: &Self,
-        permissions: &Permissions,
-    ) -> Result<Option<u64>, TestError> {
+    async fn handle(&self, permissions: &Permissions) -> Result<Option<u64>, TestError> {
         Ok(Some(52))
     }
 }

@@ -57,11 +57,10 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 /// * `Output`: The `Ok` side of the `Result`.
 /// * `Error`: The `Err` side of the `Result`. Must implement
 ///   `From<actionable::PermissionDenied>`.
-/// * For each variant in the enum, another associated type named
-///   `<VariantName>Handler`. For example, if the enum variant was
-///   `Request::AddUser`, the associated type will be `AddUserHandler`. Each of
-///   these associated types must implement the trait of the same name
-///   (described in the next section).
+/// * For each variant in the enum, another Trait named `<VariantName>Handler`.
+///   For example, if the enum variant was `Request::AddUser`, the trait will be
+///   `AddUserHandler`. Each of these traits must be implemented by any type
+///   implementing `<EnumName>Dispatcher`.
 ///
 /// The dispatcher trait has a method available for you to use to dispatch
 /// requests: `async fn dispatch(&self, permissions: &Permissions, request:
