@@ -216,7 +216,7 @@ pub fn actionable_derive(input: TokenStream) -> TokenStream {
 /// parameters that can be customized are:
 ///
 /// * `input` Type: `#[dispatcher(input = "EnumName")]`. The enum name here
-///   needs to have had [`Actionable`] derived on it.
+///   needs to have had [`Actionable`](actionable_derive) derived on it.
 /// * Crate name override: `#[actionable(actionable = "someothername")]`. If you
 ///   find yourself needing to import `actionable` as another name, this setting
 ///   will replace all mentions of `actionable` with the identifier specified.
