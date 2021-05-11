@@ -8,14 +8,14 @@ use crate::{
 };
 
 #[derive(Debug, Action)]
-#[action(actionable = "crate")]
+#[action(actionable = crate)]
 enum TestActions {
     DoSomething,
     Post(PostActions),
 }
 
 #[derive(Debug, Action)]
-#[action(actionable = "crate")]
+#[action(actionable = crate)]
 enum PostActions {
     Read,
     Update,
@@ -81,7 +81,7 @@ fn basics() {
 }
 
 #[derive(Actionable, Debug)]
-#[actionable(actionable = "crate")]
+#[actionable(actionable = crate)]
 enum Request {
     #[actionable(protection = "none")]
     UnprotectedNoParameters,
@@ -106,7 +106,7 @@ enum Request {
 }
 
 #[derive(Dispatcher, Debug)]
-#[dispatcher(input = "Request", actionable = "crate")]
+#[dispatcher(input = Request, actionable = crate)]
 struct TestDispatcher;
 
 #[async_trait::async_trait]
@@ -312,7 +312,7 @@ impl CustomProtectedStructParameterHandler for TestDispatcher {
 }
 
 #[derive(Actionable, Debug)]
-#[actionable(actionable = "crate")]
+#[actionable(actionable = crate)]
 enum GenericRequest<T> {
     #[actionable(protection = "none")]
     NonGeneric,
@@ -321,7 +321,10 @@ enum GenericRequest<T> {
 }
 
 #[derive(Dispatcher, Debug)]
-#[dispatcher(input = "GenericRequest<Request>", actionable = "crate")]
+#[dispatcher(
+    input = GenericRequest<Request>,
+    actionable = crate
+)]
 struct GenericDispatcher;
 
 #[async_trait::async_trait]

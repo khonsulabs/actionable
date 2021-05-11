@@ -5,8 +5,10 @@ use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
 
+use crate::{Actionable, ActionableArgs};
+
 #[derive(Debug, FromDeriveInput)]
-#[darling(attributes(action), supports(enum_any))]
+#[darling(supports(enum_any))]
 struct Action {
     ident: syn::Ident,
     vis: syn::Visibility,
@@ -14,8 +16,8 @@ struct Action {
     data: ast::Data<Variant, ()>,
 
     /// Overrides the crate name for `actionable` references.
-    #[darling(default)]
-    actionable: Option<String>,
+    #[darling(skip)]
+    actionable: Option<Actionable>,
 }
 
 #[derive(Debug, FromVariant)]
@@ -39,8 +41,20 @@ impl ToTokens for Action {
             .take_enum()
             .expect("Expected enum in data");
 
-        let actionable = self.actionable.as_deref().unwrap_or("actionable");
-        let actionable = syn::Ident::new(actionable, name.span());
+        let actionable = self.actionable.clone().map_or_else(
+            || {
+                let mut segments = syn::punctuated::Punctuated::new();
+                segments.push_value(syn::PathSegment {
+                    ident: syn::Ident::new("actionable", name.span()),
+                    arguments: syn::PathArguments::None,
+                });
+                syn::Path {
+                    leading_colon: None,
+                    segments,
+                }
+            },
+            |a| a.0,
+        );
         let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
         let variants = enum_data.into_iter().map(|variant| {
@@ -85,6 +99,16 @@ impl ToTokens for Action {
 }
 
 pub fn derive(input: &syn::DeriveInput) -> Result<TokenStream, darling::Error> {
-    let actionable = Action::from_derive_input(input)?;
+    let mut actionable = Action::from_derive_input(input)?;
+
+    if let Some(attr) = input
+        .attrs
+        .iter()
+        .find(|attr| attr.path.segments.first().unwrap().ident == "action")
+    {
+        let args: ActionableArgs = syn::parse2(attr.tokens.clone())?;
+        actionable.actionable = args.0;
+    }
+
     Ok(actionable.into_token_stream())
 }

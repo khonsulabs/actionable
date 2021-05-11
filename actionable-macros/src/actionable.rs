@@ -1,20 +1,21 @@
 #![allow(clippy::default_trait_access)]
 
+use crate::{actionable, Actionable as CrateAlias, ActionableArgs};
 use darling::{ast, FromDeriveInput, FromField, FromMeta, FromVariant, ToTokens};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, quote_spanned};
 
 #[derive(Debug, FromDeriveInput)]
-#[darling(attributes(actionable), supports(enum_any))]
+#[darling(supports(enum_any))]
 struct Actionable {
     ident: syn::Ident,
     vis: syn::Visibility,
     data: ast::Data<Variant, ()>,
 
     /// Overrides the crate name for `actionable` references.
-    #[darling(default)]
-    actionable: Option<String>,
+    #[darling(skip)]
+    actionable: Option<CrateAlias>,
 }
 
 #[derive(Debug, FromMeta)]
@@ -66,7 +67,7 @@ impl Variant {
         enum_name: &syn::Ident,
         generated_dispatcher_name: &syn::Ident,
         pub_tokens: &TokenStream,
-        actionable: &syn::Ident,
+        actionable: &syn::Path,
     ) -> VariantResult {
         let variant_name = &self.ident;
         let handler_name =
@@ -149,7 +150,7 @@ impl Variant {
         method_parameters: &[TokenStream],
         byref_method_parameters: &[TokenStream],
         pub_tokens: &TokenStream,
-        actionable: &syn::Ident,
+        actionable: &syn::Path,
     ) -> Handler {
         let variant_name = &self.ident;
 
@@ -300,8 +301,7 @@ impl ToTokens for Actionable {
             _ => TokenStream::default(),
         };
 
-        let actionable = self.actionable.as_deref().unwrap_or("actionable");
-        let actionable = syn::Ident::new(actionable, enum_name.span());
+        let actionable = actionable(self.actionable.clone().map(|a| a.0), enum_name.span());
 
         let mut handlers = Vec::new();
         let mut associated_types = Vec::new();
@@ -373,6 +373,16 @@ impl ToTokens for Actionable {
 }
 
 pub fn derive(input: &syn::DeriveInput) -> Result<TokenStream, darling::Error> {
-    let actionable = Actionable::from_derive_input(input)?;
+    let mut actionable = Actionable::from_derive_input(input)?;
+
+    if let Some(attr) = input
+        .attrs
+        .iter()
+        .find(|attr| attr.path.segments.first().unwrap().ident == "actionable")
+    {
+        let args: ActionableArgs = syn::parse2(attr.tokens.clone())?;
+        actionable.actionable = args.0;
+    }
+
     Ok(actionable.into_token_stream())
 }

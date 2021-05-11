@@ -50,7 +50,7 @@ enum ApiActions {
 
 /// This type contains the state of the "server": a list of users.
 #[derive(Dispatcher, Debug)]
-#[dispatcher(input = "ApiRequest")]
+#[dispatcher(input = ApiRequest)]
 struct Server {
     users: Arc<Mutex<Vec<String>>>,
 }

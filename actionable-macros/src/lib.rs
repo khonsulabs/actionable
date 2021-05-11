@@ -12,8 +12,8 @@
 #![cfg_attr(doc, deny(rustdoc))]
 
 use proc_macro::TokenStream;
-use proc_macro_error::{emit_error, proc_macro_error};
-use syn::{parse_macro_input, DeriveInput};
+use proc_macro_error::{abort, emit_error, proc_macro_error};
+use syn::{parse::Parse, parse_macro_input, DeriveInput};
 
 mod action;
 mod actionable;
@@ -232,6 +232,69 @@ pub fn dispatcher_derive(input: TokenStream) -> TokenStream {
         Err(err) => {
             emit_error!(input.ident, err.to_string());
             TokenStream::default()
+        }
+    }
+}
+
+fn actionable(actionable: Option<syn::Path>, span: proc_macro2::Span) -> syn::Path {
+    actionable.unwrap_or_else(|| {
+        let mut segments = syn::punctuated::Punctuated::new();
+        segments.push_value(syn::PathSegment {
+            ident: syn::Ident::new("actionable", span),
+            arguments: syn::PathArguments::None,
+        });
+        syn::Path {
+            leading_colon: None,
+            segments,
+        }
+    })
+}
+
+#[derive(Debug, thiserror::Error)]
+pub(crate) enum Error {
+    #[error("darling error: {0}")]
+    Darling(#[from] darling::Error),
+    #[error("syn error: {0}")]
+    Syn(#[from] syn::Error),
+}
+
+#[derive(Debug, Clone)]
+struct Actionable(syn::Path);
+
+impl Parse for Actionable {
+    fn parse(input: &'_ syn::parse::ParseBuffer<'_>) -> syn::Result<Self> {
+        let actionable: syn::Ident = input.parse()?;
+        if actionable != "actionable" {
+            abort!(
+                actionable,
+                "the only parameter action() accepts is `actionable`"
+            )
+        }
+        let _: syn::Token![=] = input.parse()?;
+        let path: syn::Path = input.parse()?;
+        Ok(Self(path))
+    }
+}
+
+#[derive(Debug)]
+struct ActionableArgs(Option<Actionable>);
+
+impl Parse for ActionableArgs {
+    fn parse(input: &'_ syn::parse::ParseBuffer<'_>) -> syn::Result<Self> {
+        let content;
+        let _ = syn::parenthesized!(content in input);
+        let mut content: syn::punctuated::Punctuated<Actionable, syn::Token![,]> =
+            content.parse_terminated(Actionable::parse)?;
+        if let Some(actionable) = content.pop() {
+            if !content.is_empty() {
+                abort!(
+                    content.first().unwrap().0.segments.first().unwrap().ident,
+                    "Only one parameter, `actionable` is allowed"
+                );
+            }
+            Ok(Self(Some(actionable.into_value())))
+        } else {
+            Ok(Self(None))
         }
     }
 }
