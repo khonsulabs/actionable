@@ -137,6 +137,13 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 
@@ -150,6 +157,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Permissions</span> {
+    <span class="doccomment">/// Returns a `Permisions` instance constructed with</span>
+    <span class="doccomment">/// [`Statement::allow_all()`].</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_all</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Statement</span>::<span class="ident">allow_all</span>()])
+    }
+
     <span class="doccomment">/// Evaluate whether the `action` is allowed to be taken upon</span>
     <span class="doccomment">/// `resource_name`. Returns true if the action should be allowed. If no</span>
     <span class="doccomment">/// statements that match `resource_name` allow `action`, false will be</span>

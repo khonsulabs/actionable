@@ -170,6 +170,19 @@
 <span id="167">167</span>
 <span id="168">168</span>
 <span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -189,6 +202,19 @@
     <span class="kw">pub</span> <span class="ident">actions</span>: <span class="ident">ActionNameList</span>,
     <span class="doccomment">/// Whether the `actions` should be allowed or disallowed.</span>
     <span class="kw">pub</span> <span class="ident">allowed</span>: <span class="ident">bool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Statement</span> {
+    <span class="doccomment">/// Returns a statement that allows [`ActionNameList::All`] against</span>
+    <span class="doccomment">/// [`ResourceName::any()`].</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allow_all</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">resources</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">ResourceName</span>::<span class="ident">any</span>()],
+            <span class="ident">actions</span>: <span class="ident">ActionNameList</span>::<span class="ident">All</span>,
+            <span class="ident">allowed</span>: <span class="bool-val">true</span>,
+        }
+    }
 }
 
 <span class="doccomment">/// A single element of a [`ResourceName`]</span>
