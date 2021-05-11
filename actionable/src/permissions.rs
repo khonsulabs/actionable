@@ -10,6 +10,13 @@ pub struct Permissions {
 }
 
 impl Permissions {
+    /// Returns a `Permisions` instance constructed with
+    /// [`Statement::allow_all()`].
+    #[must_use]
+    pub fn allow_all() -> Self {
+        Self::from(vec![Statement::allow_all()])
+    }
+
     /// Evaluate whether the `action` is allowed to be taken upon
     /// `resource_name`. Returns true if the action should be allowed. If no
     /// statements that match `resource_name` allow `action`, false will be

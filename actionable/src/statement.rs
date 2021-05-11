@@ -18,6 +18,19 @@ pub struct Statement {
     pub allowed: bool,
 }
 
+impl Statement {
+    /// Returns a statement that allows [`ActionNameList::All`] against
+    /// [`ResourceName::any()`].
+    #[must_use]
+    pub fn allow_all() -> Self {
+        Self {
+            resources: vec![ResourceName::any()],
+            actions: ActionNameList::All,
+            allowed: true,
+        }
+    }
+}
+
 /// A single element of a [`ResourceName`]
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Identifier<'a> {
