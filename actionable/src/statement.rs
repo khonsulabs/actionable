@@ -14,8 +14,6 @@ pub struct Statement {
     pub resources: Vec<ResourceName<'static>>,
     /// The list of actions this statement applies to.
     pub actions: ActionNameList,
-    /// Whether the `actions` should be allowed or disallowed.
-    pub allowed: bool,
 }
 
 impl Statement {
@@ -26,7 +24,6 @@ impl Statement {
         Self {
             resources: vec![ResourceName::any()],
             actions: ActionNameList::All,
-            allowed: true,
         }
     }
 }
@@ -103,6 +100,15 @@ where
 {
     fn from(action: T) -> Self {
         Self::List(vec![action.name()])
+    }
+}
+
+impl<T> From<Vec<T>> for ActionNameList
+where
+    T: Action,
+{
+    fn from(actions: Vec<T>) -> Self {
+        Self::List(actions.into_iter().map(|action| action.name()).collect())
     }
 }
 

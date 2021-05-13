@@ -30,19 +30,16 @@ fn basics() {
         Statement {
             resources: vec![ResourceName::any()],
             actions: ActionNameList::from(TestActions::Post(PostActions::Read)),
-            allowed: true,
         },
         // Allow all actions for the resource named all-actions-allowed
         Statement {
             resources: vec![ResourceName::named("all-actions-allowed")],
             actions: ActionNameList::All,
-            allowed: true,
         },
         // Allow all Post actions for the resource named only-post-actions-allowed
         Statement {
             resources: vec![ResourceName::named("only-post-actions-allowed")],
             actions: ActionNameList::from(ActionName(vec![Cow::Borrowed("Post")])),
-            allowed: true,
         },
     ];
     let permissions = Permissions::from(statements);
@@ -315,7 +312,6 @@ async fn example() {
     let permissions = Permissions::from(vec![Statement {
         resources: vec![ResourceName::named(42)],
         actions: ActionNameList::All,
-        allowed: true,
     }]);
     let dispatcher = TestDispatcher;
 
@@ -440,5 +436,82 @@ async fn example() {
             )
             .await,
         Err(TestError::CustomError)
+    ));
+}
+
+#[test]
+fn allowed_actions_merging_tests() {
+    let permissions_a = Permissions::from(vec![
+        Statement {
+            resources: vec![ResourceName::named("started_with_all")],
+            actions: ActionNameList::All,
+        },
+        Statement {
+            resources: vec![ResourceName::named("started_with_some")],
+            actions: ActionNameList::from(vec![TestActions::DoSomething]),
+        },
+        Statement {
+            resources: vec![ResourceName::named("nested").and("started_with_all")],
+            actions: ActionNameList::All,
+        },
+        Statement {
+            resources: vec![ResourceName::named("nested").and("started_with_some")],
+            actions: ActionNameList::from(vec![TestActions::DoSomething]),
+        },
+    ]);
+    let permissions_b = Permissions::from(vec![
+        Statement {
+            resources: vec![ResourceName::named("started_with_none")],
+            actions: ActionNameList::All,
+        },
+        Statement {
+            resources: vec![ResourceName::named("started_with_some")],
+            actions: ActionNameList::All,
+        },
+        Statement {
+            resources: vec![ResourceName::named("nested").and("started_with_none")],
+            actions: ActionNameList::from(vec![TestActions::Post(PostActions::Read)]),
+        },
+        Statement {
+            resources: vec![ResourceName::named("nested").and("started_with_some")],
+            actions: ActionNameList::from(vec![TestActions::Post(PostActions::Read)]),
+        },
+    ]);
+
+    let merged = Permissions::merged(&[permissions_a, permissions_b]);
+    // For the top level, on Actions we're only testing transitioning form either None/Some to All
+    assert!(merged.allowed_to(
+        &ResourceName::named("started_with_all"),
+        &TestActions::DoSomething
+    ));
+    assert!(merged.allowed_to(
+        &ResourceName::named("started_with_none"),
+        &TestActions::DoSomething
+    ));
+    assert!(merged.allowed_to(
+        &ResourceName::named("started_with_some"),
+        &TestActions::DoSomething
+    ));
+    assert!(merged.allowed_to(
+        &ResourceName::named("started_with_some"),
+        &TestActions::Post(PostActions::Delete)
+    ));
+    // For the nested level, the transitions will only take permissions to a Some() instead of All.
+    assert!(merged.allowed_to(
+        &ResourceName::named("nested").and("started_with_none"),
+        &TestActions::Post(PostActions::Read)
+    ));
+    assert!(!merged.allowed_to(
+        &ResourceName::named("nested").and("started_with_none"),
+        &TestActions::DoSomething
+    ));
+
+    assert!(merged.allowed_to(
+        &ResourceName::named("nested").and("started_with_some"),
+        &TestActions::Post(PostActions::Read)
+    ));
+    assert!(merged.allowed_to(
+        &ResourceName::named("nested").and("started_with_some"),
+        &TestActions::DoSomething
     ));
 }

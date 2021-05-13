@@ -72,6 +72,28 @@ impl Permissions {
         }
         matches!(allowed, AllowedActions::All)
     }
+
+    /// Returns a new instance that merges all allowed actions from `permissions`.
+    #[must_use]
+    pub fn merged(permissions: &[Self]) -> Self {
+        let mut combined = Self::default();
+        for incoming in permissions {
+            combined.add_permissions(incoming);
+        }
+        combined
+    }
+
+    fn add_permissions(&mut self, permissions: &Self) {
+        if let Some(children) = &permissions.children {
+            let our_children = self.children.get_or_insert_with(HashMap::new);
+            for (name, permissions) in children {
+                let our_permissions = our_children.entry(name.clone()).or_default();
+                our_permissions.add_permissions(permissions);
+            }
+        }
+
+        self.allowed.add_allowed(&permissions.allowed);
+    }
 }
 
 impl From<Vec<Statement>> for Permissions {
@@ -118,18 +140,14 @@ impl From<Vec<Statement>> for Permissions {
                     ActionNameList::All => {}
                 }
 
-                if statement.allowed {
-                    *allowed = AllowedActions::All
-                } else {
-                    *allowed = AllowedActions::None
-                }
+                *allowed = AllowedActions::All
             }
         }
         permissions
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum AllowedActions {
     None,
     Some(HashMap<String, AllowedActions>),
@@ -139,5 +157,28 @@ enum AllowedActions {
 impl Default for AllowedActions {
     fn default() -> Self {
         Self::None
+    }
+}
+
+impl AllowedActions {
+    fn add_allowed(&mut self, other: &Self) {
+        match other {
+            Self::None => {}
+            Self::Some(actions) => {
+                if !matches!(self, Self::All) {
+                    if let Self::Some(our_allowed) = self {
+                        for (name, allowed) in actions {
+                            let our_entry = our_allowed.entry(name.clone()).or_default();
+                            our_entry.add_allowed(allowed);
+                        }
+                    } else {
+                        *self = Self::Some(actions.clone());
+                    }
+                }
+            }
+            Self::All => {
+                *self = Self::All;
+            }
+        }
     }
 }

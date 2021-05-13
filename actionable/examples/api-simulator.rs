@@ -156,21 +156,18 @@ async fn main() -> anyhow::Result<()> {
     let admin_permissions = Permissions::from(vec![Statement {
         resources: vec![ResourceName::any()],
         actions: ActionNameList::All,
-        allowed: true,
     }]);
 
     // Any user that is in the list can create other users.
     let known_user_permissions = Permissions::from(vec![Statement {
         resources: vec![ResourceName::any()],
         actions: ActionNameList::from(ApiActions::AddUser),
-        allowed: true,
     }]);
 
     // For inexplicable reasons, all unregistered users can delete jon
     let default_permissions = Permissions::from(vec![Statement {
         resources: vec![ResourceName::named("jon")],
         actions: ActionNameList::from(ApiActions::DeleteUser),
-        allowed: true,
     }]);
 
     // Create our dispatcher, which is the server in this example.
