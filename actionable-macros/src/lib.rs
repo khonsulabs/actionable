@@ -87,13 +87,13 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 /// # use actionable::{Permissions, async_trait};
 /// #[async_trait]
 /// trait Handler {
-///    type Dispatcher;
-///    async fn handle(
-///        dispatcher: &Self::Dispatcher,
-///        permissions: &Permissions,
-///        /* each field on this variant is passed
-///           as a parameter to this method */
-///    ) -> Result<Output, Error>;
+///     type Dispatcher;
+///     async fn handle(
+///         dispatcher: &Self::Dispatcher,
+///         permissions: &Permissions,
+///         /* each field on this variant is passed
+///         as a parameter to this method */
+///     ) -> Result<Output, Error>;
 /// }
 /// ```
 ///
@@ -110,23 +110,23 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 /// # use actionable::{Permissions, ResourceName, async_trait};
 /// #[async_trait]
 /// trait Handler {
-///    type Dispatcher;
-///    type Action;
+///     type Dispatcher;
+///     type Action;
 ///
-///    fn resource_name<'a>(
-///        dispatcher: &Self::Dispatcher,
-///        /* each field on this variant is passed
-///           by reference as a parameter to this method */
-///    ) -> ResourceName<'a>;
+///     fn resource_name<'a>(
+///         dispatcher: &Self::Dispatcher,
+///         /* each field on this variant is passed
+///         by reference as a parameter to this method */
+///     ) -> ResourceName<'a>;
 ///
-///    fn action() -> Self::Action;
+///     fn action() -> Self::Action;
 ///
-///    async fn handle_protected(
-///        dispatcher: &Self::Dispatcher,
-///        permissions: &Permissions,
-///        /* each field on this variant is passed
-///           as a parameter to this method */
-///    ) -> Result<Output, Error>;
+///     async fn handle_protected(
+///         dispatcher: &Self::Dispatcher,
+///         permissions: &Permissions,
+///         /* each field on this variant is passed
+///         as a parameter to this method */
+///     ) -> Result<Output, Error>;
 /// }
 /// ```
 ///
@@ -146,20 +146,20 @@ pub fn action_derive(input: TokenStream) -> TokenStream {
 /// # use actionable::{Permissions, async_trait};
 /// #[async_trait]
 /// trait Handler {
-///    type Dispatcher;
-///    async fn verify_permissions(
-///        dispatcher: &Self::Dispatcher,
-///        permissions: &Permissions,
-///        /* each field on this variant is passed
-///           by refrence as a parameter to this method */
-///    ) -> Result<(), Error>;
+///     type Dispatcher;
+///     async fn verify_permissions(
+///         dispatcher: &Self::Dispatcher,
+///         permissions: &Permissions,
+///         /* each field on this variant is passed
+///         by refrence as a parameter to this method */
+///     ) -> Result<(), Error>;
 ///
-///    async fn handle_protected(
-///        dispatcher: &Self::Dispatcher,
-///        permissions: &Permissions,
-///        /* each field on this variant is passed as a parameter
-///        to this method */
-///    ) -> Result<Output, Error>;
+///     async fn handle_protected(
+///         dispatcher: &Self::Dispatcher,
+///         permissions: &Permissions,
+///         /* each field on this variant is passed as a parameter
+///         to this method */
+///     ) -> Result<Output, Error>;
 /// }
 /// ```
 ///

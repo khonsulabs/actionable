@@ -108,8 +108,8 @@ struct TestDispatcher;
 
 #[async_trait::async_trait]
 impl RequestDispatcher for TestDispatcher {
-    type Output = Option<u64>;
     type Error = TestError;
+    type Output = Option<u64>;
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -287,8 +287,8 @@ struct GenericDispatcher;
 
 #[async_trait::async_trait]
 impl GenericRequestDispatcher for GenericDispatcher {
-    type Output = Option<u64>;
     type Error = TestError;
+    type Output = Option<u64>;
     type Subaction = Request;
 
     async fn handle_subaction(
@@ -325,10 +325,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::UnprotectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::UnprotectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -349,10 +348,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::SimplyProtectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -366,10 +364,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::CustomProtectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::CustomProtectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -407,10 +404,9 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::SimplyProtectedStructParameter { value: 1 },
-            )
+            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
+                value: 1
+            },)
             .await,
         Err(TestError::PermissionDenied(_))
     ));
@@ -430,10 +426,9 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::CustomProtectedStructParameter { value: 1 },
-            )
+            .dispatch(&permissions, Request::CustomProtectedStructParameter {
+                value: 1
+            },)
             .await,
         Err(TestError::CustomError)
     ));
@@ -479,7 +474,8 @@ fn allowed_actions_merging_tests() {
     ]);
 
     let merged = Permissions::merged(&[permissions_a, permissions_b]);
-    // For the top level, on Actions we're only testing transitioning form either None/Some to All
+    // For the top level, on Actions we're only testing transitioning form either
+    // None/Some to All
     assert!(merged.allowed_to(
         &ResourceName::named("started_with_all"),
         &TestActions::DoSomething
@@ -496,7 +492,8 @@ fn allowed_actions_merging_tests() {
         &ResourceName::named("started_with_some"),
         &TestActions::Post(PostActions::Delete)
     ));
-    // For the nested level, the transitions will only take permissions to a Some() instead of All.
+    // For the nested level, the transitions will only take permissions to a Some()
+    // instead of All.
     assert!(merged.allowed_to(
         &ResourceName::named("nested").and("started_with_none"),
         &TestActions::Post(PostActions::Read)

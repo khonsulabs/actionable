@@ -1,10 +1,11 @@
 #![allow(clippy::default_trait_access)]
 
-use crate::{actionable, Actionable as CrateAlias, ActionableArgs};
 use darling::{ast, FromDeriveInput, FromField, FromMeta, FromVariant, ToTokens};
 use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, quote_spanned};
+
+use crate::{actionable, Actionable as CrateAlias, ActionableArgs};
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(supports(enum_any))]
@@ -138,7 +139,8 @@ impl Variant {
     }
 
     #[allow(clippy::cognitive_complexity)]
-    // The complexity is because of the multiple big quote! macros, but I don't see a way to make this much easier to read
+    // The complexity is because of the multiple big quote! macros, but I don't see a way to make
+    // this much easier to read
     #[allow(clippy::too_many_arguments)] // TODO maybe refactor?
     fn generate_handler(
         &self,
@@ -331,13 +333,10 @@ impl ToTokens for Actionable {
         }
 
         let (subaction_type, subaction_handler) = if subaction {
-            (
-                quote!(<Self::Subaction>),
-                quote! {
-                    type Subaction: Send;
-                    async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
-                },
-            )
+            (quote!(<Self::Subaction>), quote! {
+                type Subaction: Send;
+                async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+            })
         } else {
             (TokenStream::default(), TokenStream::default())
         };

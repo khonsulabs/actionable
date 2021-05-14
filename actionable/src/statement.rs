@@ -1,8 +1,9 @@
-use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fmt::{Display, Formatter, Write},
 };
+
+use serde::{Deserialize, Serialize};
 
 use super::{Action, ActionName};
 
@@ -31,7 +32,8 @@ impl Statement {
 /// A single element of a [`ResourceName`]
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Identifier<'a> {
-    /// When checking for allowed permissions, allow any match where this identifier is used.
+    /// When checking for allowed permissions, allow any match where this
+    /// identifier is used.
     Any,
     /// An integer identifier.
     Integer(u64),
@@ -178,9 +180,8 @@ impl<'a> AsRef<[Identifier<'a>]> for ResourceName<'a> {
 }
 
 impl<'a> IntoIterator for ResourceName<'a> {
-    type Item = Identifier<'a>;
-
     type IntoIter = std::vec::IntoIter<Identifier<'a>>;
+    type Item = Identifier<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use crate::{Action, ActionNameList, Identifier, Statement};
 
-/// A collection of allowed permissions. This is constructed from a `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
+/// A collection of allowed permissions. This is constructed from a
+/// `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
 #[derive(Default, Debug)]
 pub struct Permissions {
     children: Option<HashMap<Identifier<'static>, Permissions>>,
@@ -73,7 +74,8 @@ impl Permissions {
         matches!(allowed, AllowedActions::All)
     }
 
-    /// Returns a new instance that merges all allowed actions from `permissions`.
+    /// Returns a new instance that merges all allowed actions from
+    /// `permissions`.
     #[must_use]
     pub fn merged(permissions: &[Self]) -> Self {
         let mut combined = Self::default();
@@ -114,7 +116,7 @@ impl From<Vec<Statement>> for Permissions {
                 // Apply the "allowed" status to each action in this resource.
                 let mut allowed = &mut current_permissions.allowed;
                 match &statement.actions {
-                    ActionNameList::List(actions) => {
+                    ActionNameList::List(actions) =>
                         for action in actions {
                             for name in &action.0 {
                                 let action_map = match allowed {
@@ -135,8 +137,7 @@ impl From<Vec<Statement>> for Permissions {
                                 };
                                 allowed = action_map.entry(name.to_string()).or_default();
                             }
-                        }
-                    }
+                        },
                     ActionNameList::All => {}
                 }
 
@@ -164,7 +165,7 @@ impl AllowedActions {
     fn add_allowed(&mut self, other: &Self) {
         match other {
             Self::None => {}
-            Self::Some(actions) => {
+            Self::Some(actions) =>
                 if !matches!(self, Self::All) {
                     if let Self::Some(our_allowed) = self {
                         for (name, allowed) in actions {
@@ -174,8 +175,7 @@ impl AllowedActions {
                     } else {
                         *self = Self::Some(actions.clone());
                     }
-                }
-            }
+                },
             Self::All => {
                 *self = Self::All;
             }

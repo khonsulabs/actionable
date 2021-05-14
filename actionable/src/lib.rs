@@ -30,7 +30,7 @@
 //! #[derive(Action, Debug)]
 //! pub enum AllActions {
 //!     FlushCache,
-//!     User(UserActions)
+//!     User(UserActions),
 //! }
 //!
 //! #[derive(Action, Debug)]
@@ -60,17 +60,18 @@
 //! # let permissions = Permissions::default();
 //! let allowed = permissions.allowed_to(
 //!     &ResourceName::named("users").and(42),
-//!     &AllActions::User(UserActions::Delete)
+//!     &AllActions::User(UserActions::Delete),
 //! );
 //! ```
 //!
 //! ## Permission-driven async API
 //!
-//! At the core of many networked APIs written in Rust is an enum that represents
-//! a request, and similarly there are usually common response/error types. In
-//! these applications, there is usually a manually-written match statement
-//! that, for readability and maintainability, simply pass the parameters from
-//! the request to a helper method to handle the actual logic of the request.
+//! At the core of many networked APIs written in Rust is an enum that
+//! represents a request, and similarly there are usually common response/error
+//! types. In these applications, there is usually a manually-written match
+//! statement that, for readability and maintainability, simply pass the
+//! parameters from the request to a helper method to handle the actual logic of
+//! the request.
 //!
 //! The goal of the API portion of this crate is to replace the aforementioned
 //! boilerplate match statement with a simple derive macro. For a commented example, check out [`actionable/examples/api-simulator.rs`](https://github.com/khonsulabs/actionable/blob/main/actionable/examples/api-simulator.rs).
@@ -91,6 +92,9 @@ mod dispatcher;
 mod permissions;
 mod statement;
 
+pub use actionable_macros::Actionable;
+#[doc(hidden)]
+pub use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 pub use self::{
@@ -99,10 +103,6 @@ pub use self::{
     permissions::Permissions,
     statement::{ActionNameList, Identifier, ResourceName, Statement},
 };
-
-pub use actionable_macros::Actionable;
-#[doc(hidden)]
-pub use async_trait::async_trait;
 
 #[cfg(test)]
 mod tests;

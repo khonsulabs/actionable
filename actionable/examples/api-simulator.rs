@@ -1,22 +1,26 @@
-use actionable::{
-    Action, ActionNameList, Actionable, Dispatcher, Permissions, ResourceName, Statement,
-};
-use async_trait::async_trait;
 use std::{
     io::{self, BufRead},
     sync::Arc,
 };
+
+use actionable::{
+    Action, ActionNameList, Actionable, Dispatcher, Permissions, ResourceName, Statement,
+};
+use async_trait::async_trait;
 use tokio::sync::Mutex;
 
 /// This enum is what a "client" will send the "server" in our API.
 // The derive(Actionable) macro is generating multiple traits for our "server"
 // to implement:
 //
-// * `ApiRequestDispatcher`: Defines the Output and Error types, as well as the
-//   types that implement the remaining traits.
-// * `ListUsersHandler`: A trait that defines the function invoked when a `ListUsers` request is dispatched.
-// * `AddUserHandler`: A trait that defines the function invoked when a `AddUser` request is dispatched.
-// * `DeleteUserHandler`: A trait that defines the function invoked when a `DeleteUser` request is dispatched.
+// * `ApiRequestDispatcher`: Defines the Output and Error types, as well as the types that implement
+//   the remaining traits.
+// * `ListUsersHandler`: A trait that defines the function invoked when a `ListUsers` request is
+//   dispatched.
+// * `AddUserHandler`: A trait that defines the function invoked when a `AddUser` request is
+//   dispatched.
+// * `DeleteUserHandler`: A trait that defines the function invoked when a `DeleteUser` request is
+//   dispatched.
 #[derive(Actionable, Debug)]
 pub enum ApiRequest {
     /// An unprotected API request with no permissions checks
@@ -57,8 +61,8 @@ struct Server {
 
 /// This is the implementation of the dispatcher for `ApiRequest`.
 impl ApiRequestDispatcher for Server {
-    type Output = ApiResponse;
     type Error = anyhow::Error;
+    type Output = ApiResponse;
 }
 
 /// Handles `ApiRequest::ListUsers`
@@ -150,7 +154,8 @@ async fn main() -> anyhow::Result<()> {
         String::from("jim"),
     ];
 
-    // In a real program, you should build some sort of mechanism for storing permissions, not hard-coding them like this.
+    // In a real program, you should build some sort of mechanism for storing
+    // permissions, not hard-coding them like this.
 
     // "admin" can do anything
     let admin_permissions = Permissions::from(vec![Statement {

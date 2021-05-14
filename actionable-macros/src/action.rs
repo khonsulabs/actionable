@@ -58,31 +58,31 @@ impl ToTokens for Action {
         let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
         let variants = enum_data.into_iter().map(|variant| {
-                let ident = variant.ident.clone();
-                let ident_as_string = ident.to_string();
-                match variant.fields.len() {
-                    0 => {
-                        quote! {
-                            Self::#ident => #actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)])
-                        }
-                    }
-                    1 => {
-                        quote! {
-                            Self::#ident(subaction) => {
-                                let mut name = Action::name(subaction);
-                                name.0.insert(0, ::std::borrow::Cow::Borrowed(#ident_as_string));
-                                name
-                            }
-                        }
-                    }
-                    _ => {
-                        abort!(
-                            variant.ident,
-                            "For derive(Action), all enum variants may have at most 1 field"
-                        )
-                    }
-                }
-            });
+			let ident = variant.ident.clone();
+			let ident_as_string = ident.to_string();
+			match variant.fields.len() {
+				0 => {
+					quote! {
+						Self::#ident => #actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)])
+					}
+				}
+				1 => {
+					quote! {
+						Self::#ident(subaction) => {
+							let mut name = Action::name(subaction);
+							name.0.insert(0, ::std::borrow::Cow::Borrowed(#ident_as_string));
+							name
+						}
+					}
+				}
+				_ => {
+					abort!(
+						variant.ident,
+						"For derive(Action), all enum variants may have at most 1 field"
+					)
+				}
+			}
+		});
 
         tokens.extend(quote! {
             impl#impl_generics Action for #name#type_generics #where_clause {

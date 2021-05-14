@@ -16,12 +16,12 @@ struct Dispatcher {
     generics: syn::Generics,
     #[darling(skip)]
     args: Option<Args>,
-    // /// Overrides the crate name for `actionable` references.
-    // #[darling(default)]
-    // actionable: Option<String>,
-    // /// The enum that had `Actionable` derived on it.
-    // input: String,
-    // input2: Punctuated<syn::PathSegment, syn::Token![;]>,
+    /* /// Overrides the crate name for `actionable` references.
+     * #[darling(default)]
+     * actionable: Option<String>,
+     * /// The enum that had `Actionable` derived on it.
+     * input: String,
+     * input2: Punctuated<syn::PathSegment, syn::Token![;]>, */
 }
 
 #[derive(Debug, Default)]
