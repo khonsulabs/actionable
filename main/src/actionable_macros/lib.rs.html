@@ -312,7 +312,7 @@
     <span class="ident">future_incompatible</span>,
     <span class="ident">rust_2018_idioms</span>
 )]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">doc</span>, <span class="ident">deny</span>(<span class="ident">rustdoc</span>))]</span>
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">doc</span>, <span class="ident">deny</span>(<span class="ident">rustdoc</span>::<span class="ident">all</span>))]</span>
 
 <span class="kw">use</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>;
 <span class="kw">use</span> <span class="ident">proc_macro_error</span>::{<span class="ident">abort</span>, <span class="ident">emit_error</span>, <span class="ident">proc_macro_error</span>};
@@ -390,13 +390,13 @@
 <span class="doccomment">/// # use actionable::{Permissions, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
-<span class="doccomment">///    type Dispatcher;</span>
-<span class="doccomment">///    async fn handle(</span>
-<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
-<span class="doccomment">///        permissions: &amp;Permissions,</span>
-<span class="doccomment">///        /* each field on this variant is passed</span>
-<span class="doccomment">///           as a parameter to this method */</span>
-<span class="doccomment">///    ) -&gt; Result&lt;Output, Error&gt;;</span>
+<span class="doccomment">///     type Dispatcher;</span>
+<span class="doccomment">///     async fn handle(</span>
+<span class="doccomment">///         dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///         permissions: &amp;Permissions,</span>
+<span class="doccomment">///         /* each field on this variant is passed</span>
+<span class="doccomment">///         as a parameter to this method */</span>
+<span class="doccomment">///     ) -&gt; Result&lt;Output, Error&gt;;</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
@@ -413,23 +413,23 @@
 <span class="doccomment">/// # use actionable::{Permissions, ResourceName, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
-<span class="doccomment">///    type Dispatcher;</span>
-<span class="doccomment">///    type Action;</span>
+<span class="doccomment">///     type Dispatcher;</span>
+<span class="doccomment">///     type Action;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///    fn resource_name&lt;&#39;a&gt;(</span>
-<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
-<span class="doccomment">///        /* each field on this variant is passed</span>
-<span class="doccomment">///           by reference as a parameter to this method */</span>
-<span class="doccomment">///    ) -&gt; ResourceName&lt;&#39;a&gt;;</span>
+<span class="doccomment">///     fn resource_name&lt;&#39;a&gt;(</span>
+<span class="doccomment">///         dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///         /* each field on this variant is passed</span>
+<span class="doccomment">///         by reference as a parameter to this method */</span>
+<span class="doccomment">///     ) -&gt; ResourceName&lt;&#39;a&gt;;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///    fn action() -&gt; Self::Action;</span>
+<span class="doccomment">///     fn action() -&gt; Self::Action;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///    async fn handle_protected(</span>
-<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
-<span class="doccomment">///        permissions: &amp;Permissions,</span>
-<span class="doccomment">///        /* each field on this variant is passed</span>
-<span class="doccomment">///           as a parameter to this method */</span>
-<span class="doccomment">///    ) -&gt; Result&lt;Output, Error&gt;;</span>
+<span class="doccomment">///     async fn handle_protected(</span>
+<span class="doccomment">///         dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///         permissions: &amp;Permissions,</span>
+<span class="doccomment">///         /* each field on this variant is passed</span>
+<span class="doccomment">///         as a parameter to this method */</span>
+<span class="doccomment">///     ) -&gt; Result&lt;Output, Error&gt;;</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>
@@ -449,20 +449,20 @@
 <span class="doccomment">/// # use actionable::{Permissions, async_trait};</span>
 <span class="doccomment">/// #[async_trait]</span>
 <span class="doccomment">/// trait Handler {</span>
-<span class="doccomment">///    type Dispatcher;</span>
-<span class="doccomment">///    async fn verify_permissions(</span>
-<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
-<span class="doccomment">///        permissions: &amp;Permissions,</span>
-<span class="doccomment">///        /* each field on this variant is passed</span>
-<span class="doccomment">///           by refrence as a parameter to this method */</span>
-<span class="doccomment">///    ) -&gt; Result&lt;(), Error&gt;;</span>
+<span class="doccomment">///     type Dispatcher;</span>
+<span class="doccomment">///     async fn verify_permissions(</span>
+<span class="doccomment">///         dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///         permissions: &amp;Permissions,</span>
+<span class="doccomment">///         /* each field on this variant is passed</span>
+<span class="doccomment">///         by refrence as a parameter to this method */</span>
+<span class="doccomment">///     ) -&gt; Result&lt;(), Error&gt;;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">///    async fn handle_protected(</span>
-<span class="doccomment">///        dispatcher: &amp;Self::Dispatcher,</span>
-<span class="doccomment">///        permissions: &amp;Permissions,</span>
-<span class="doccomment">///        /* each field on this variant is passed as a parameter</span>
-<span class="doccomment">///        to this method */</span>
-<span class="doccomment">///    ) -&gt; Result&lt;Output, Error&gt;;</span>
+<span class="doccomment">///     async fn handle_protected(</span>
+<span class="doccomment">///         dispatcher: &amp;Self::Dispatcher,</span>
+<span class="doccomment">///         permissions: &amp;Permissions,</span>
+<span class="doccomment">///         /* each field on this variant is passed as a parameter</span>
+<span class="doccomment">///         to this method */</span>
+<span class="doccomment">///     ) -&gt; Result&lt;Output, Error&gt;;</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">///</span>

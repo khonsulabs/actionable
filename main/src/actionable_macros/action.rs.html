@@ -176,31 +176,31 @@
         <span class="kw">let</span> (<span class="ident">impl_generics</span>, <span class="ident">type_generics</span>, <span class="ident">where_clause</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">generics</span>.<span class="ident">split_for_impl</span>();
 
         <span class="kw">let</span> <span class="ident">variants</span> <span class="op">=</span> <span class="ident">enum_data</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">variant</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">variant</span>.<span class="ident">ident</span>.<span class="ident">clone</span>();
-                <span class="kw">let</span> <span class="ident">ident_as_string</span> <span class="op">=</span> <span class="ident">ident</span>.<span class="ident">to_string</span>();
-                <span class="kw">match</span> <span class="ident">variant</span>.<span class="ident">fields</span>.<span class="ident">len</span>() {
-                    <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">quote</span><span class="macro">!</span> {
-                            <span class="self">Self</span>::#<span class="ident">ident</span> <span class="op">=</span><span class="op">&gt;</span> #<span class="ident">actionable</span>::<span class="ident">ActionName</span>(<span class="macro">vec</span><span class="macro">!</span>[::<span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(#<span class="ident">ident_as_string</span>)])
-                        }
-                    }
-                    <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">quote</span><span class="macro">!</span> {
-                            <span class="self">Self</span>::#<span class="ident">ident</span>(<span class="ident">subaction</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">Action</span>::<span class="ident">name</span>(<span class="ident">subaction</span>);
-                                <span class="ident">name</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="number">0</span>, ::<span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(#<span class="ident">ident_as_string</span>));
-                                <span class="ident">name</span>
-                            }
-                        }
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">abort</span><span class="macro">!</span>(
-                            <span class="ident">variant</span>.<span class="ident">ident</span>,
-                            <span class="string">&quot;For derive(Action), all enum variants may have at most 1 field&quot;</span>
-                        )
-                    }
-                }
-            });
+			<span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span> <span class="ident">variant</span>.<span class="ident">ident</span>.<span class="ident">clone</span>();
+			<span class="kw">let</span> <span class="ident">ident_as_string</span> <span class="op">=</span> <span class="ident">ident</span>.<span class="ident">to_string</span>();
+			<span class="kw">match</span> <span class="ident">variant</span>.<span class="ident">fields</span>.<span class="ident">len</span>() {
+				<span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="macro">quote</span><span class="macro">!</span> {
+						<span class="self">Self</span>::#<span class="ident">ident</span> <span class="op">=</span><span class="op">&gt;</span> #<span class="ident">actionable</span>::<span class="ident">ActionName</span>(<span class="macro">vec</span><span class="macro">!</span>[::<span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(#<span class="ident">ident_as_string</span>)])
+					}
+				}
+				<span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="macro">quote</span><span class="macro">!</span> {
+						<span class="self">Self</span>::#<span class="ident">ident</span>(<span class="ident">subaction</span>) <span class="op">=</span><span class="op">&gt;</span> {
+							<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">Action</span>::<span class="ident">name</span>(<span class="ident">subaction</span>);
+							<span class="ident">name</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="number">0</span>, ::<span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(#<span class="ident">ident_as_string</span>));
+							<span class="ident">name</span>
+						}
+					}
+				}
+				<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="macro">abort</span><span class="macro">!</span>(
+						<span class="ident">variant</span>.<span class="ident">ident</span>,
+						<span class="string">&quot;For derive(Action), all enum variants may have at most 1 field&quot;</span>
+					)
+				}
+			}
+		});
 
         <span class="ident">tokens</span>.<span class="ident">extend</span>(<span class="macro">quote</span><span class="macro">!</span> {
             <span class="kw">impl</span>#<span class="ident">impl_generics</span> <span class="ident">Action</span> <span class="kw">for</span> #<span class="ident">name</span>#<span class="ident">type_generics</span> #<span class="ident">where_clause</span> {

@@ -152,7 +152,7 @@
 <span class="doccomment">//! #[derive(Action, Debug)]</span>
 <span class="doccomment">//! pub enum AllActions {</span>
 <span class="doccomment">//!     FlushCache,</span>
-<span class="doccomment">//!     User(UserActions)</span>
+<span class="doccomment">//!     User(UserActions),</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! #[derive(Action, Debug)]</span>
@@ -182,17 +182,18 @@
 <span class="doccomment">//! # let permissions = Permissions::default();</span>
 <span class="doccomment">//! let allowed = permissions.allowed_to(</span>
 <span class="doccomment">//!     &amp;ResourceName::named(&quot;users&quot;).and(42),</span>
-<span class="doccomment">//!     &amp;AllActions::User(UserActions::Delete)</span>
+<span class="doccomment">//!     &amp;AllActions::User(UserActions::Delete),</span>
 <span class="doccomment">//! );</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Permission-driven async API</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! At the core of many networked APIs written in Rust is an enum that represents</span>
-<span class="doccomment">//! a request, and similarly there are usually common response/error types. In</span>
-<span class="doccomment">//! these applications, there is usually a manually-written match statement</span>
-<span class="doccomment">//! that, for readability and maintainability, simply pass the parameters from</span>
-<span class="doccomment">//! the request to a helper method to handle the actual logic of the request.</span>
+<span class="doccomment">//! At the core of many networked APIs written in Rust is an enum that</span>
+<span class="doccomment">//! represents a request, and similarly there are usually common response/error</span>
+<span class="doccomment">//! types. In these applications, there is usually a manually-written match</span>
+<span class="doccomment">//! statement that, for readability and maintainability, simply pass the</span>
+<span class="doccomment">//! parameters from the request to a helper method to handle the actual logic of</span>
+<span class="doccomment">//! the request.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The goal of the API portion of this crate is to replace the aforementioned</span>
 <span class="doccomment">//! boilerplate match statement with a simple derive macro. For a commented example, check out [`actionable/examples/api-simulator.rs`](https://github.com/khonsulabs/actionable/blob/main/actionable/examples/api-simulator.rs).</span>
@@ -213,6 +214,9 @@
 <span class="kw">mod</span> <span class="ident">permissions</span>;
 <span class="kw">mod</span> <span class="ident">statement</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actionable_macros</span>::<span class="ident">Actionable</span>;
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">async_trait</span>::<span class="ident">async_trait</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
@@ -221,10 +225,6 @@
     <span class="ident">permissions</span>::<span class="ident">Permissions</span>,
     <span class="ident">statement</span>::{<span class="ident">ActionNameList</span>, <span class="ident">Identifier</span>, <span class="ident">ResourceName</span>, <span class="ident">Statement</span>},
 };
-
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">actionable_macros</span>::<span class="ident">Actionable</span>;
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">async_trait</span>::<span class="ident">async_trait</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span>;
