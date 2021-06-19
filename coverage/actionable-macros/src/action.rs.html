@@ -827,7 +827,7 @@
                 17
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                let ident = variant.ident.clone();</pre>
+                <pre class="has-background-success-light py-0 px-2">			let ident = variant.ident.clone();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -840,7 +840,7 @@
                 17
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                let ident_as_string = ident.to_string();</pre>
+                <pre class="has-background-success-light py-0 px-2">			let ident_as_string = ident.to_string();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -853,7 +853,7 @@
                 17
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                match variant.fields.len() {</pre>
+                <pre class="has-background-success-light py-0 px-2">			match variant.fields.len() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -866,7 +866,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    0 =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">				0 =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -879,7 +879,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        quote! {</pre>
+                <pre class="has-background-success-light py-0 px-2">					quote! {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -892,7 +892,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                            Self::#ident =&gt; #actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)])</pre>
+                <pre class="has-background-success-light py-0 px-2">						Self::#ident =&gt; #actionable::ActionName(vec![::std::borrow::Cow::Borrowed(#ident_as_string)])</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -905,7 +905,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        }</pre>
+                <pre class="has-background-success-light py-0 px-2">					}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -918,7 +918,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+                <pre class="has-background-white py-0 px-2">				}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -931,7 +931,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    1 =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">				1 =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -944,7 +944,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        quote! {</pre>
+                <pre class="has-background-success-light py-0 px-2">					quote! {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -957,7 +957,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                            Self::#ident(subaction) =&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">						Self::#ident(subaction) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -970,7 +970,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                                let mut name = Action::name(subaction);</pre>
+                <pre class="has-background-success-light py-0 px-2">							let mut name = Action::name(subaction);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -983,7 +983,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                                name.0.insert(0, ::std::borrow::Cow::Borrowed(#ident_as_string));</pre>
+                <pre class="has-background-success-light py-0 px-2">							name.0.insert(0, ::std::borrow::Cow::Borrowed(#ident_as_string));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -996,7 +996,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                                name</pre>
+                <pre class="has-background-success-light py-0 px-2">							name</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1009,7 +1009,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                            }</pre>
+                <pre class="has-background-success-light py-0 px-2">						}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1022,7 +1022,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        }</pre>
+                <pre class="has-background-success-light py-0 px-2">					}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1035,7 +1035,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+                <pre class="has-background-white py-0 px-2">				}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1048,7 +1048,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    _ =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">				_ =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1061,7 +1061,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        abort!(</pre>
+                <pre class="has-background-danger-light py-0 px-2">					abort!(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1074,7 +1074,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            variant.ident,</pre>
+                <pre class="has-background-danger-light py-0 px-2">						variant.ident,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1087,7 +1087,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            &quot;For derive(Action), all enum variants may have at most 1 field&quot;</pre>
+                <pre class="has-background-danger-light py-0 px-2">						&quot;For derive(Action), all enum variants may have at most 1 field&quot;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1100,7 +1100,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        )</pre>
+                <pre class="has-background-danger-light py-0 px-2">					)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1113,7 +1113,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+                <pre class="has-background-white py-0 px-2">				}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1126,7 +1126,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }</pre>
+                <pre class="has-background-white py-0 px-2">			}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1139,7 +1139,7 @@
                 17
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            });</pre>
+                <pre class="has-background-success-light py-0 px-2">		});</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1521,7 +1521,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-05-13 15:00</p>
+                <p class="heading">Date: 2021-06-19 19:44</p>
             </div>
         </footer>
     </body>
