@@ -1,12 +1,17 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{Action, ActionNameList, Identifier, Statement};
 
 /// A collection of allowed permissions. This is constructed from a
 /// `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Permissions {
-    children: Option<HashMap<Identifier<'static>, Permissions>>,
+    data: Arc<Data>,
+}
+
+#[derive(Default, Debug, Clone)]
+struct Data {
+    children: Option<HashMap<Identifier<'static>, Data>>,
     allowed: AllowedActions,
 }
 
@@ -23,6 +28,41 @@ impl Permissions {
     /// statements that match `resource_name` allow `action`, false will be
     /// returned.
     pub fn allowed_to<'a, R: AsRef<[Identifier<'a>]>, P: Action>(
+        &self,
+        resource_name: R,
+        action: &P,
+    ) -> bool {
+        self.data.allowed_to(resource_name, action)
+    }
+
+    /// Returns a new instance that merges all allowed actions from
+    /// `permissions`.
+    #[must_use]
+    pub fn merged(permissions: &[Self]) -> Self {
+        let mut combined = Data::default();
+        for incoming in permissions {
+            combined.add_permissions(&incoming.data);
+        }
+        Self {
+            data: Arc::new(combined),
+        }
+    }
+}
+
+impl Data {
+    fn add_permissions(&mut self, permissions: &Self) {
+        if let Some(children) = &permissions.children {
+            let our_children = self.children.get_or_insert_with(HashMap::new);
+            for (name, permissions) in children {
+                let our_permissions = our_children.entry(name.clone()).or_default();
+                our_permissions.add_permissions(permissions);
+            }
+        }
+
+        self.allowed.add_allowed(&permissions.allowed);
+    }
+
+    fn allowed_to<'a, R: AsRef<[Identifier<'a>]>, P: Action>(
         &self,
         resource_name: R,
         action: &P,
@@ -73,34 +113,11 @@ impl Permissions {
         }
         matches!(allowed, AllowedActions::All)
     }
-
-    /// Returns a new instance that merges all allowed actions from
-    /// `permissions`.
-    #[must_use]
-    pub fn merged(permissions: &[Self]) -> Self {
-        let mut combined = Self::default();
-        for incoming in permissions {
-            combined.add_permissions(incoming);
-        }
-        combined
-    }
-
-    fn add_permissions(&mut self, permissions: &Self) {
-        if let Some(children) = &permissions.children {
-            let our_children = self.children.get_or_insert_with(HashMap::new);
-            for (name, permissions) in children {
-                let our_permissions = our_children.entry(name.clone()).or_default();
-                our_permissions.add_permissions(permissions);
-            }
-        }
-
-        self.allowed.add_allowed(&permissions.allowed);
-    }
 }
 
 impl From<Vec<Statement>> for Permissions {
     fn from(statements: Vec<Statement>) -> Self {
-        let mut permissions = Self::default();
+        let mut permissions = Data::default();
         for statement in statements {
             // Apply this statement to all resources
             for resource in statement.resources {
@@ -144,7 +161,9 @@ impl From<Vec<Statement>> for Permissions {
                 *allowed = AllowedActions::All
             }
         }
-        permissions
+        Self {
+            data: Arc::new(permissions),
+        }
     }
 }
 

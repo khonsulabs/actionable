@@ -85,7 +85,7 @@
     future_incompatible,
     rust_2018_idioms
 )]
-#![cfg_attr(doc, deny(rustdoc))]
+#![cfg_attr(doc, deny(rustdoc::all))]
 
 mod action;
 mod dispatcher;
