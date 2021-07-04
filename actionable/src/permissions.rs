@@ -1,15 +1,17 @@
 use std::{collections::HashMap, sync::Arc};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{Action, ActionNameList, Identifier, Statement};
 
 /// A collection of allowed permissions. This is constructed from a
 /// `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Permissions {
     data: Arc<Data>,
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 struct Data {
     children: Option<HashMap<Identifier<'static>, Data>>,
     allowed: AllowedActions,
@@ -167,7 +169,7 @@ impl From<Vec<Statement>> for Permissions {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 enum AllowedActions {
     None,
     Some(HashMap<String, AllowedActions>),

@@ -11,7 +11,7 @@ categories = ["algorithms"]
 readme = "../README.md"
 
 [dependencies]
-serde = { version="1", features=["derive"] }
+serde = { version="1", features=["derive", "rc"] }
 actionable-macros = { path="../actionable-macros", version="0.1.0-dev.3" }
 thiserror = "1"
 async-trait = "0.1"
