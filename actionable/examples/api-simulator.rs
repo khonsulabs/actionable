@@ -116,8 +116,8 @@ impl AddUserHandler for Server {
 impl DeleteUserHandler for Server {
     type Action = ApiActions;
 
-    fn resource_name<'a>(&'a self, username: &'a String) -> ResourceName<'a> {
-        ResourceName::named(username.clone())
+    async fn resource_name<'a>(&'a self, username: &'a String) -> anyhow::Result<ResourceName<'a>> {
+        Ok(ResourceName::named(username.clone()))
     }
 
     fn action() -> Self::Action {

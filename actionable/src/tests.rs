@@ -153,8 +153,8 @@ impl UnprotectedNoParametersHandler for TestDispatcher {
 impl SimplyProtectedEnumParameterHandler for TestDispatcher {
     type Action = TestActions;
 
-    fn resource_name<'a>(&'a self, arg1: &'a u64) -> ResourceName<'a> {
-        ResourceName::named(*arg1)
+    async fn resource_name<'a>(&'a self, arg1: &'a u64) -> Result<ResourceName<'a>, TestError> {
+        Ok(ResourceName::named(*arg1))
     }
 
     fn action() -> Self::Action {
@@ -174,8 +174,8 @@ impl SimplyProtectedEnumParameterHandler for TestDispatcher {
 impl SimplyProtectedStructParameterHandler for TestDispatcher {
     type Action = TestActions;
 
-    fn resource_name<'a>(&self, arg1: &'a u64) -> ResourceName<'a> {
-        ResourceName::named(*arg1)
+    async fn resource_name<'a>(&'a self, arg1: &'a u64) -> Result<ResourceName<'a>, TestError> {
+        Ok(ResourceName::named(*arg1))
     }
 
     fn action() -> Self::Action {
@@ -195,8 +195,8 @@ impl SimplyProtectedStructParameterHandler for TestDispatcher {
 impl SimplyProtectedNoParametersHandler for TestDispatcher {
     type Action = TestActions;
 
-    fn resource_name(&self) -> ResourceName<'static> {
-        ResourceName::named(0)
+    async fn resource_name<'a>(&'a self) -> Result<ResourceName<'a>, TestError> {
+        Ok(ResourceName::named(0))
     }
 
     fn action() -> Self::Action {

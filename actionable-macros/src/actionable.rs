@@ -180,7 +180,7 @@ impl Variant {
 
                 quote! {
                     #[allow(clippy::ptr_arg)]
-                    fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> #actionable::ResourceName<'a>;
+                    async fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
@@ -189,7 +189,7 @@ impl Variant {
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
-                        let resource = self.resource_name(#(&#enum_parameters),*);
+                        let resource = self.resource_name(#(&#enum_parameters),*).await?;
                         let action = Self::action();
                         if permissions.allowed_to(&resource, &action) {
                             self.handle_protected(permissions, #(#enum_parameters),*).await
