@@ -23,7 +23,7 @@
         <div>
             <p class="heading">Functions</p>
             <p class="title has-text-success">
-                <abbr title="49 / 52">94.23 %</abbr></p>
+                <abbr title="52 / 55">94.55 %</abbr></p>
         </div>
     </div>
 
@@ -2062,7 +2062,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self, arg1: &amp;&#x27;a u64) -&gt; ResourceName&lt;&#x27;a&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">    async fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self, arg1: &amp;&#x27;a u64) -&gt; Result&lt;ResourceName&lt;&#x27;a&gt;, TestError&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2075,7 +2075,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        ResourceName::named(*arg1)</pre>
+                <pre class="has-background-success-light py-0 px-2">        Ok(ResourceName::named(*arg1))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2335,7 +2335,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn resource_name&lt;&#x27;a&gt;(&amp;self, arg1: &amp;&#x27;a u64) -&gt; ResourceName&lt;&#x27;a&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">    async fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self, arg1: &amp;&#x27;a u64) -&gt; Result&lt;ResourceName&lt;&#x27;a&gt;, TestError&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2348,7 +2348,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        ResourceName::named(*arg1)</pre>
+                <pre class="has-background-success-light py-0 px-2">        Ok(ResourceName::named(*arg1))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2608,7 +2608,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn resource_name(&amp;self) -&gt; ResourceName&lt;&#x27;static&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">    async fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self) -&gt; Result&lt;ResourceName&lt;&#x27;a&gt;, TestError&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2621,7 +2621,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        ResourceName::named(0)</pre>
+                <pre class="has-background-success-light py-0 px-2">        Ok(ResourceName::named(0))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6721,7 +6721,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-07-04 19:19</p>
+                <p class="heading">Date: 2021-07-20 00:02</p>
             </div>
         </footer>
     </body>

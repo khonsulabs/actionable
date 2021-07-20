@@ -2413,7 +2413,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self,#(#byref_method_parameters),*) -&gt; #actionable::ResourceName&lt;&#x27;a&gt;;</pre>
+                <pre class="has-background-success-light py-0 px-2">                    async fn resource_name&lt;&#x27;a&gt;(&amp;&#x27;a self,#(#byref_method_parameters),*) -&gt; Result&lt;#actionable::ResourceName&lt;&#x27;a&gt;, #self_as_dispatcher::Error&gt;;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2530,7 +2530,7 @@
                 14
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        let resource = self.resource_name(#(&amp;#enum_parameters),*);</pre>
+                <pre class="has-background-success-light py-0 px-2">                        let resource = self.resource_name(#(&amp;#enum_parameters),*).await?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4966,7 +4966,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-07-04 19:19</p>
+                <p class="heading">Date: 2021-07-20 00:02</p>
             </div>
         </footer>
     </body>
