@@ -1,6 +1,6 @@
 [package]
 name = "actionable-macros"
-version = "0.1.0-dev.4"
+version = "0.1.0-dev.5"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "Macros for `actionable`"
@@ -15,13 +15,13 @@ proc-macro = true
 
 [dependencies]
 proc-macro2 = "1"
-syn = { version="1", features=["derive"] }
+syn = { version = "1", features = ["derive"] }
 quote = "1"
 proc-macro-error = "1"
-darling = "0.12"
+darling = "0.13"
 ident_case = "1"
 thiserror = "1"
 
 [dev-dependencies]
 compiletest_rs = "0.7"
-actionable = { path="../actionable" }
+actionable = { path = "../actionable" }

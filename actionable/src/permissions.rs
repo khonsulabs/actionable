@@ -134,7 +134,7 @@ impl From<Vec<Statement>> for Permissions {
 
                 // Apply the "allowed" status to each action in this resource.
                 match &statement.actions {
-                    ActionNameList::List(actions) => {
+                    ActionNameList::List(actions) =>
                         for action in actions {
                             let mut allowed = &mut current_permissions.allowed;
                             for name in &action.0 {
@@ -157,8 +157,7 @@ impl From<Vec<Statement>> for Permissions {
                                 allowed = action_map.entry(name.to_string()).or_default();
                             }
                             *allowed = AllowedActions::All;
-                        }
-                    }
+                        },
                     ActionNameList::All => {
                         current_permissions.allowed = AllowedActions::All;
                     }
@@ -188,7 +187,7 @@ impl AllowedActions {
     fn add_allowed(&mut self, other: &Self) {
         match other {
             Self::None => {}
-            Self::Some(actions) => {
+            Self::Some(actions) =>
                 if !matches!(self, Self::All) {
                     if let Self::Some(our_allowed) = self {
                         for (name, allowed) in actions {
@@ -198,8 +197,7 @@ impl AllowedActions {
                     } else {
                         *self = Self::Some(actions.clone());
                     }
-                }
-            }
+                },
             Self::All => {
                 *self = Self::All;
             }
