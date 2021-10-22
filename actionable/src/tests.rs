@@ -77,6 +77,38 @@ fn basics() {
     ));
 }
 
+#[test]
+fn multiple_actions() {
+    // Default action is deny
+    let statements = vec![
+        // Allow Read on all.
+        Statement {
+            resources: vec![ResourceName::any()],
+            actions: ActionNameList::List(vec![
+                TestActions::Post(PostActions::Read).name(),
+                TestActions::Post(PostActions::Delete).name(),
+            ]),
+        },
+    ];
+    let permissions = Permissions::from(statements);
+
+    // Check the positive cases:
+    assert!(permissions.allowed_to(
+        &ResourceName::named("someresource"),
+        &TestActions::Post(PostActions::Read)
+    ));
+    assert!(permissions.allowed_to(
+        &ResourceName::named("someresource"),
+        &TestActions::Post(PostActions::Delete)
+    ));
+
+    // Check another permission
+    assert!(!permissions.allowed_to(
+        &ResourceName::named("someresource"),
+        &TestActions::DoSomething
+    ));
+}
+
 #[derive(Actionable, Debug)]
 #[actionable(actionable = crate)]
 enum Request {
