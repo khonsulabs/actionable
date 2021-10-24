@@ -359,7 +359,7 @@ impl ToTokens for Actionable {
             }
 
             #(#handlers)*
-        })
+        });
     }
 }
 

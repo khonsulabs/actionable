@@ -40,7 +40,7 @@ impl Permissions {
     /// Returns a new instance that merges all allowed actions from
     /// `permissions`.
     #[must_use]
-    pub fn merged(permissions: &[Self]) -> Self {
+    pub fn merged<'a>(permissions: impl Iterator<Item = &'a Self>) -> Self {
         let mut combined = Data::default();
         for incoming in permissions {
             combined.add_permissions(&incoming.data);
