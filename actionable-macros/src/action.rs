@@ -94,7 +94,7 @@ impl ToTokens for Action {
                     }
                 }
             }
-        })
+        });
     }
 }
 

@@ -327,7 +327,7 @@ impl ToTokens for Actionable {
                     if subaction {
                         abort!(self.ident, "only one subaction is allowed")
                     }
-                    subaction = true
+                    subaction = true;
                 }
                 VariantHandler::Handler { handler, name } => {
                     handlers.push(handler);
