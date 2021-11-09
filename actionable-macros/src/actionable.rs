@@ -166,6 +166,7 @@ impl Variant {
 
         let implementation = match self.protection {
             Protection::None => quote! {
+                #[allow(clippy::too_many_arguments)]
                 async fn handle(
                     &self,
                     permissions: &#actionable::Permissions,
@@ -179,11 +180,12 @@ impl Variant {
                 })));
 
                 quote! {
-                    #[allow(clippy::ptr_arg)]
+                    #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
                     async fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
+                    #[allow(clippy::too_many_arguments)]
                     async fn handle(
                         &self,
                         permissions: &#actionable::Permissions,
@@ -198,6 +200,7 @@ impl Variant {
                         }
                     }
 
+                    #[allow(clippy::too_many_arguments)]
                     async fn handle_protected(
                         &self,
                         permissions: &#actionable::Permissions,
@@ -207,9 +210,10 @@ impl Variant {
             }
             Protection::Custom => {
                 quote! {
-                    #[allow(clippy::ptr_arg)]
+                    #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
                     async fn verify_permissions(&self, permissions: &#actionable::Permissions, #(#byref_method_parameters),*) -> Result<(), #self_as_dispatcher::Error>;
 
+                    #[allow(clippy::too_many_arguments)]
                     async fn handle(
                         &self,
                         permissions: &#actionable::Permissions,
@@ -219,6 +223,7 @@ impl Variant {
                         self.handle_protected(permissions, #(#enum_parameters),*).await
                     }
 
+                    #[allow(clippy::too_many_arguments)]
                     async fn handle_protected(
                         &self,
                         permissions: &#actionable::Permissions,
@@ -333,10 +338,13 @@ impl ToTokens for Actionable {
         }
 
         let (subaction_type, subaction_handler) = if subaction {
-            (quote!(<Self::Subaction>), quote! {
-                type Subaction: Send;
-                async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
-            })
+            (
+                quote!(<Self::Subaction>),
+                quote! {
+                    type Subaction: Send;
+                    async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+                },
+            )
         } else {
             (TokenStream::default(), TokenStream::default())
         };
