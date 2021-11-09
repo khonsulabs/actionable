@@ -1,6 +1,6 @@
 [package]
 name = "actionable-macros"
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "Macros for `actionable`"
