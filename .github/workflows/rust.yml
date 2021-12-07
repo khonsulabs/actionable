@@ -59,31 +59,3 @@ jobs:
           git-config-email: botsu@khonsulabs.com
           target-folder: /main/
           clean: true
-
-  coverage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install code coverage requirements
-        run: |
-          rustup component add llvm-tools-preview
-          rustup install nightly-2021-03-25
-          curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
-          cargo install badgeland
-
-      - name: Run code coverage
-        run: |
-          PATH=".:$PATH" ./generate-code-coverage.sh
-
-      - name: Deploy Docs
-        if: github.ref == 'refs/heads/main'
-        uses: JamesIves/github-pages-deploy-action@releases/v4
-        with:
-          branch: gh-pages
-          folder: coverage/
-          git-config-name: kl-botsu
-          git-config-email: botsu@khonsulabs.com
-          target-folder: /coverage/
-          clean: true
