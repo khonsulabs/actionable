@@ -1,8 +1,8 @@
 //! Actionable provides the basic functionality needed to build an async-based
 //! API that has a flexible permissions system integrated.
 //!
-//! This crate was designed to be used by [`PliantDb`](https://pliantdb.dev/)
-//! internally, and as a way for users of `PliantDb` to extend their database
+//! This crate was designed to be used by [`BonsaiDb`](https://bonsaidb.io/)
+//! internally, and as a way for users of `BonsaiDb` to extend their database
 //! servers with their own APIs.
 //!
 //! ## Permissions
