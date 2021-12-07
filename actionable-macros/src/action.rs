@@ -11,7 +11,6 @@ use crate::{Actionable, ActionableArgs};
 #[darling(supports(enum_any))]
 struct Action {
     ident: syn::Ident,
-    vis: syn::Visibility,
     generics: syn::Generics,
     data: ast::Data<Variant, ()>,
 
@@ -27,10 +26,7 @@ struct Variant {
 }
 
 #[derive(Debug, FromField)]
-struct Field {
-    ident: Option<syn::Ident>,
-    ty: syn::Type,
-}
+struct Field {}
 
 impl ToTokens for Action {
     fn to_tokens(&self, tokens: &mut TokenStream) {

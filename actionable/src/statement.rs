@@ -187,3 +187,9 @@ impl<'a> IntoIterator for ResourceName<'a> {
         self.0.into_iter()
     }
 }
+
+impl<'b, 'a> From<&'b [Identifier<'a>]> for ResourceName<'a> {
+    fn from(parts: &'b [Identifier<'a>]) -> Self {
+        Self(parts.to_vec())
+    }
+}

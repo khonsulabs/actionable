@@ -4,7 +4,6 @@
 #![warn(
     clippy::cargo,
     missing_docs,
-    clippy::nursery,
     clippy::pedantic,
     future_incompatible,
     rust_2018_idioms
@@ -284,16 +283,17 @@ impl Parse for ActionableArgs {
         let _ = syn::parenthesized!(content in input);
         let mut content: syn::punctuated::Punctuated<Actionable, syn::Token![,]> =
             content.parse_terminated(Actionable::parse)?;
-        if let Some(actionable) = content.pop() {
-            if !content.is_empty() {
-                abort!(
-                    content.first().unwrap().0.segments.first().unwrap().ident,
-                    "Only one parameter, `actionable` is allowed"
-                );
-            }
-            Ok(Self(Some(actionable.into_value())))
-        } else {
-            Ok(Self(None))
-        }
+        content.pop().map_or_else(
+            || Ok(Self(None)),
+            |actionable| {
+                if !content.is_empty() {
+                    abort!(
+                        content.first().unwrap().0.segments.first().unwrap().ident,
+                        "Only one parameter, `actionable` is allowed"
+                    );
+                }
+                Ok(Self(Some(actionable.into_value())))
+            },
+        )
     }
 }

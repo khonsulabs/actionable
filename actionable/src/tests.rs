@@ -358,10 +358,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::UnprotectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::UnprotectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -382,10 +381,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::SimplyProtectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -399,10 +397,9 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::CustomProtectedStructParameter { value: 42 },
-            )
+            .dispatch(&permissions, Request::CustomProtectedStructParameter {
+                value: 42
+            },)
             .await
             .unwrap(),
         Some(42)
@@ -440,10 +437,9 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::SimplyProtectedStructParameter { value: 1 },
-            )
+            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
+                value: 1
+            },)
             .await,
         Err(TestError::PermissionDenied(_))
     ));
@@ -463,10 +459,9 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(
-                &permissions,
-                Request::CustomProtectedStructParameter { value: 1 },
-            )
+            .dispatch(&permissions, Request::CustomProtectedStructParameter {
+                value: 1
+            },)
             .await,
         Err(TestError::CustomError)
     ));

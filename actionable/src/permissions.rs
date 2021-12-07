@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Action, ActionNameList, Identifier, Statement};
+use crate::{Action, ActionNameList, Identifier, PermissionDenied, ResourceName, Statement};
 
 /// A collection of allowed permissions. This is constructed from a
 /// `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
@@ -23,6 +23,27 @@ impl Permissions {
     #[must_use]
     pub fn allow_all() -> Self {
         Self::from(vec![Statement::allow_all()])
+    }
+
+    /// Evaluate whether the `action` is allowed to be taken upon
+    /// `resource_name`. Returns `Ok` if permission is allowed.
+    ///
+    /// # Errors
+    ///
+    /// Returns `PermissionDenied` if permission is now allowed.
+    pub fn check<'a, R: AsRef<[Identifier<'a>]>, P: Action>(
+        &self,
+        resource_name: R,
+        action: &P,
+    ) -> Result<(), PermissionDenied> {
+        if self.data.allowed_to(resource_name.as_ref(), action) {
+            Ok(())
+        } else {
+            Err(PermissionDenied {
+                resource: ResourceName::from(resource_name.as_ref()).to_owned(),
+                action: action.name(),
+            })
+        }
     }
 
     /// Evaluate whether the `action` is allowed to be taken upon

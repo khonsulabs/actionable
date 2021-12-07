@@ -85,12 +85,13 @@ impl Variant {
         };
 
         for (index, field) in self.fields.iter().enumerate() {
-            let arg_name = if let Some(ident) = &field.ident {
-                is_struct_style = true;
-                ident.clone()
-            } else {
-                syn::Ident::new(&format!("arg{}", index), variant_name.span())
-            };
+            let arg_name = field.ident.as_ref().map_or_else(
+                || syn::Ident::new(&format!("arg{}", index), variant_name.span()),
+                |ident| {
+                    is_struct_style = true;
+                    ident.clone()
+                },
+            );
             let arg_type = &field.ty;
             method_parameters.push(quote!(#arg_name: #arg_type));
             byref_method_parameters.push(quote!(#arg_name: &#byref_lifetime #arg_type));
@@ -174,11 +175,6 @@ impl Variant {
                 ) -> #result_type;
             },
             Protection::Simple => {
-                let permission_denied_error = quote!(Err(#self_as_dispatcher::Error::from(#actionable::PermissionDenied {
-                    resource: resource.to_owned(),
-                    action: #actionable::Action::name(&action),
-                })));
-
                 quote! {
                     #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
                     async fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
@@ -193,11 +189,8 @@ impl Variant {
                     ) -> #result_type {
                         let resource = self.resource_name(#(&#enum_parameters),*).await?;
                         let action = Self::action();
-                        if permissions.allowed_to(&resource, &action) {
-                            self.handle_protected(permissions, #(#enum_parameters),*).await
-                        } else {
-                            #permission_denied_error
-                        }
+                        permissions.check(&resource, &action)?;
+                        self.handle_protected(permissions, #(#enum_parameters),*).await
                     }
 
                     #[allow(clippy::too_many_arguments)]
@@ -338,13 +331,10 @@ impl ToTokens for Actionable {
         }
 
         let (subaction_type, subaction_handler) = if subaction {
-            (
-                quote!(<Self::Subaction>),
-                quote! {
-                    type Subaction: Send;
-                    async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
-                },
-            )
+            (quote!(<Self::Subaction>), quote! {
+                type Subaction: Send;
+                async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+            })
         } else {
             (TokenStream::default(), TokenStream::default())
         };

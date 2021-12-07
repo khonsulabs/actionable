@@ -12,16 +12,9 @@ use crate::{actionable, Error};
 #[darling(supports(any))]
 struct Dispatcher {
     ident: syn::Ident,
-    vis: syn::Visibility,
     generics: syn::Generics,
     #[darling(skip)]
     args: Option<Args>,
-    /* /// Overrides the crate name for `actionable` references.
-     * #[darling(default)]
-     * actionable: Option<String>,
-     * /// The enum that had `Actionable` derived on it.
-     * input: String,
-     * input2: Punctuated<syn::PathSegment, syn::Token![;]>, */
 }
 
 #[derive(Debug, Default)]
