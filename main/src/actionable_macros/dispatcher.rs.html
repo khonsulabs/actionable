@@ -105,13 +105,6 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::default_trait_access</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">darling</span>::{<span class="ident">FromDeriveInput</span>, <span class="ident">ToTokens</span>};
@@ -126,16 +119,9 @@
 <span class="attribute">#[<span class="ident">darling</span>(<span class="ident">supports</span>(<span class="ident">any</span>))]</span>
 <span class="kw">struct</span> <span class="ident">Dispatcher</span> {
     <span class="ident">ident</span>: <span class="ident">syn::Ident</span>,
-    <span class="ident">vis</span>: <span class="ident">syn::Visibility</span>,
     <span class="ident">generics</span>: <span class="ident">syn::Generics</span>,
     <span class="attribute">#[<span class="ident">darling</span>(<span class="ident">skip</span>)]</span>
     <span class="ident">args</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Args</span><span class="op">&gt;</span>,
-    <span class="comment">/* /// Overrides the crate name for `actionable` references.
-     * #[darling(default)]
-     * actionable: Option&lt;String&gt;,
-     * /// The enum that had `Actionable` derived on it.
-     * input: String,
-     * input2: Punctuated&lt;syn::PathSegment, syn::Token![;]&gt;, */</span>
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>

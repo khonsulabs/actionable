@@ -303,7 +303,6 @@
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy::cargo</span>,
     <span class="ident">missing_docs</span>,
-    <span class="ident">clippy::nursery</span>,
     <span class="ident">clippy::pedantic</span>,
     <span class="ident">future_incompatible</span>,
     <span class="ident">rust_2018_idioms</span>
@@ -583,17 +582,18 @@
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">syn::parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">content</span>: <span class="ident">syn::punctuated::Punctuated</span><span class="op">&lt;</span><span class="ident">Actionable</span>, <span class="macro">syn::Token!</span>[,]<span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">content</span>.<span class="ident">parse_terminated</span>(<span class="ident">Actionable::parse</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">actionable</span>) <span class="op">=</span> <span class="ident">content</span>.<span class="ident">pop</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">content</span>.<span class="ident">is_empty</span>() {
-                <span class="macro">abort!</span>(
-                    <span class="ident">content</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">segments</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="ident">ident</span>,
-                    <span class="string">&quot;Only one parameter, `actionable` is allowed&quot;</span>
-                );
-            }
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="prelude-val">Some</span>(<span class="ident">actionable</span>.<span class="ident">into_value</span>())))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="prelude-val">None</span>))
-        }
+        <span class="ident">content</span>.<span class="ident">pop</span>().<span class="ident">map_or_else</span>(
+            <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="prelude-val">None</span>)),
+            <span class="op">|</span><span class="ident">actionable</span><span class="op">|</span> {
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">content</span>.<span class="ident">is_empty</span>() {
+                    <span class="macro">abort!</span>(
+                        <span class="ident">content</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="number">0</span>.<span class="ident">segments</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="ident">ident</span>,
+                        <span class="string">&quot;Only one parameter, `actionable` is allowed&quot;</span>
+                    );
+                }
+                <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="prelude-val">Some</span>(<span class="ident">actionable</span>.<span class="ident">into_value</span>())))
+            },
+        )
     }
 }
 </code></pre></div>

@@ -108,10 +108,6 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::default_trait_access</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">darling</span>::{<span class="ident">ast</span>, <span class="ident">FromDeriveInput</span>, <span class="ident">FromField</span>, <span class="ident">FromVariant</span>, <span class="ident">ToTokens</span>};
@@ -125,7 +121,6 @@
 <span class="attribute">#[<span class="ident">darling</span>(<span class="ident">supports</span>(<span class="ident">enum_any</span>))]</span>
 <span class="kw">struct</span> <span class="ident">Action</span> {
     <span class="ident">ident</span>: <span class="ident">syn::Ident</span>,
-    <span class="ident">vis</span>: <span class="ident">syn::Visibility</span>,
     <span class="ident">generics</span>: <span class="ident">syn::Generics</span>,
     <span class="ident">data</span>: <span class="ident">ast::Data</span><span class="op">&lt;</span><span class="ident">Variant</span>, ()<span class="op">&gt;</span>,
 
@@ -141,10 +136,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">FromField</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Field</span> {
-    <span class="ident">ident</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Ident</span><span class="op">&gt;</span>,
-    <span class="ident">ty</span>: <span class="ident">syn::Type</span>,
-}
+<span class="kw">struct</span> <span class="ident">Field</span> {}
 
 <span class="kw">impl</span> <span class="ident">ToTokens</span> <span class="kw">for</span> <span class="ident">Action</span> {
     <span class="kw">fn</span> <span class="ident">to_tokens</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tokens</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TokenStream</span>) {
