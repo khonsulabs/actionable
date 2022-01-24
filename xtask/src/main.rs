@@ -1,30 +1,42 @@
 use khonsu_tools::{
-    anyhow,
-    code_coverage::{self, CodeCoverage},
-};
-use structopt::StructOpt;
-
-#[derive(StructOpt, Debug)]
-pub enum Commands {
-    GenerateCodeCoverageReport {
-        #[structopt(long = "install-dependencies")]
-        install_dependencies: bool,
+    publish,
+    universal::{
+        anyhow,
+        clap::Parser,
+        code_coverage::{self},
+        DefaultConfig,
     },
-}
+};
 
 fn main() -> anyhow::Result<()> {
-    let command = Commands::from_args();
-    match command {
-        Commands::GenerateCodeCoverageReport {
-            install_dependencies,
-        } => CodeCoverage::<CoverageConfig>::execute(install_dependencies),
+    khonsu_tools::Commands::parse().execute::<Config>()
+}
+
+struct Config;
+
+impl khonsu_tools::universal::Config for Config {
+    type Audit = DefaultConfig;
+
+    type CodeCoverage = Self;
+}
+
+impl khonsu_tools::Config for Config {
+    type Publish = Self;
+
+    type Universal = Self;
+}
+
+impl code_coverage::Config for Config {
+    fn ignore_paths() -> Vec<String> {
+        vec![String::from("actionable/examples/*")]
     }
 }
 
-struct CoverageConfig;
-
-impl code_coverage::Config for CoverageConfig {
-    fn ignore_paths() -> Vec<String> {
-        vec![String::from("actionable/examples/*")]
+impl publish::Config for Config {
+    fn paths() -> Vec<String> {
+        vec![
+            String::from("actionable-macros"),
+            String::from("actionable"),
+        ]
     }
 }
