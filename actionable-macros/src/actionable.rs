@@ -13,6 +13,7 @@ struct Actionable {
     ident: syn::Ident,
     vis: syn::Visibility,
     data: ast::Data<Variant, ()>,
+    generics: syn::Generics,
 
     /// Overrides the crate name for `actionable` references.
     #[darling(skip)]
@@ -67,6 +68,7 @@ impl Variant {
         &self,
         enum_name: &syn::Ident,
         generated_dispatcher_name: &syn::Ident,
+        lifetimes: &TokenStream,
         pub_tokens: &TokenStream,
         actionable: &syn::Path,
     ) -> VariantResult {
@@ -79,7 +81,7 @@ impl Variant {
         let mut enum_parameters = Vec::new();
         let mut is_struct_style = false;
         let byref_lifetime = if matches!(self.protection, Protection::Simple) {
-            quote!('a)
+            quote!('name)
         } else {
             TokenStream::default()
         };
@@ -107,6 +109,7 @@ impl Variant {
         } else {
             self.generate_handler(
                 &handler_name,
+                lifetimes,
                 generated_dispatcher_name,
                 &enum_parameters,
                 &method_parameters,
@@ -119,6 +122,7 @@ impl Variant {
         let match_case = self.generate_match_case(
             is_struct_style,
             &handler_name,
+            lifetimes,
             &enum_parameters,
             &handler.parameters,
             enum_name,
@@ -146,6 +150,7 @@ impl Variant {
     fn generate_handler(
         &self,
         handler_name: &syn::Ident,
+        lifetimes: &TokenStream,
         generated_dispatcher_name: &syn::Ident,
         enum_parameters: &[syn::Ident],
         method_parameters: &[TokenStream],
@@ -159,7 +164,7 @@ impl Variant {
         handle_parameters.insert(0, syn::Ident::new("self", variant_name.span()));
         handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
-        let self_as_dispatcher = quote! {<Self as #generated_dispatcher_name>};
+        let self_as_dispatcher = quote! {<Self as #generated_dispatcher_name#lifetimes>};
         let result_type = quote!(Result<
             #self_as_dispatcher::Output,
             #self_as_dispatcher::Error
@@ -177,7 +182,7 @@ impl Variant {
             Protection::Simple => {
                 quote! {
                     #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
-                    async fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
+                    async fn resource_name<'name>(&'name self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'name>, #self_as_dispatcher::Error>;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
@@ -232,7 +237,7 @@ impl Variant {
                 variant_name.span() =>
                     #[#actionable::async_trait]
                     #[doc(hidden)]
-                    #pub_tokens trait #handler_name: #generated_dispatcher_name  {
+                    #pub_tokens trait #handler_name#lifetimes: #generated_dispatcher_name#lifetimes  {
                         #implementation
                     }
             },
@@ -243,6 +248,7 @@ impl Variant {
         &self,
         is_struct_style: bool,
         handler_name: &syn::Ident,
+        lifetimes: &TokenStream,
         enum_parameters: &[syn::Ident],
         handle_parameters: &[syn::Ident],
         enum_name: &syn::Ident,
@@ -257,19 +263,19 @@ impl Variant {
         } else if is_struct_style {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name{#(#enum_parameters),*} => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name#lifetimes>::handle(#(#handle_parameters),*).await
                 },
             }
         } else if self.fields.is_empty() {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name#lifetimes>::handle(#(#handle_parameters),*).await
                 }
             }
         } else {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name(#(#enum_parameters),*) => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name#lifetimes>::handle(#(#handle_parameters),*).await
                 },
             }
         }
@@ -308,10 +314,18 @@ impl ToTokens for Actionable {
 
         let mut subaction = false;
 
+        let lifetimes = self.generics.lifetimes().collect::<Vec<_>>();
+        let bracketed_lifetimes = if lifetimes.is_empty() {
+            TokenStream::default()
+        } else {
+            quote! {< #(#lifetimes),* >}
+        };
+
         for variant in enum_data {
             let result = variant.generate_code(
                 enum_name,
                 &generated_dispatcher_name,
+                &bracketed_lifetimes,
                 &pub_tokens,
                 &actionable,
             );
@@ -324,25 +338,34 @@ impl ToTokens for Actionable {
                 }
                 VariantHandler::Handler { handler, name } => {
                     handlers.push(handler);
-                    handler_names.push(name);
+                    handler_names.push(quote! { #name#bracketed_lifetimes });
                 }
             }
             match_cases.push(result.match_case);
         }
 
         let (subaction_type, subaction_handler) = if subaction {
-            (quote!(<Self::Subaction>), quote! {
-                type Subaction: Send;
-                async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
-            })
-        } else {
+            (
+                if lifetimes.is_empty() {
+                    quote!(<Self::Subaction>)
+                } else {
+                    quote!(<#(#lifetimes),*, Self::Subaction>)
+                },
+                quote! {
+                    type Subaction: Send;
+                    async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+                },
+            )
+        } else if lifetimes.is_empty() {
             (TokenStream::default(), TokenStream::default())
+        } else {
+            (bracketed_lifetimes.clone(), TokenStream::default())
         };
 
         tokens.extend(quote! {
             #[#actionable::async_trait]
             #[doc(hidden)]
-            #pub_tokens trait #generated_dispatcher_name: Send + Sync {
+            #pub_tokens trait #generated_dispatcher_name#bracketed_lifetimes: Send + Sync {
                 type Output: Send + Sync;
                 type Error: From<#actionable::PermissionDenied> + Send + Sync;
 
