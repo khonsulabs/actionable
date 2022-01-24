@@ -84,6 +84,7 @@
     future_incompatible,
     rust_2018_idioms
 )]
+#![allow(clippy::no_effect_underscore_binding)] // async_trait false positives
 #![cfg_attr(doc, deny(rustdoc::all))]
 
 mod action;

@@ -339,6 +339,79 @@ impl NonGenericHandler for GenericDispatcher {
     }
 }
 
+#[derive(Actionable, Debug)]
+#[actionable(actionable = crate)]
+enum LifetimeGenericRequest<'a, T> {
+    #[actionable(protection = "none")]
+    CowInGeneric(Cow<'a, [u8]>),
+    #[actionable(protection = "none", subaction)]
+    LifetimeSub(T),
+}
+
+#[derive(Dispatcher, Debug)]
+#[dispatcher(
+    input = LifetimeGenericRequest<'a, Request>,
+    actionable = crate
+)]
+struct LifetimeGenericDispatcher;
+
+#[async_trait::async_trait]
+impl<'a> LifetimeGenericRequestDispatcher<'a> for LifetimeGenericDispatcher {
+    type Error = TestError;
+    type Output = Option<u64>;
+    type Subaction = Request;
+
+    async fn handle_subaction(
+        &self,
+        permissions: &Permissions,
+        subaction: Request,
+    ) -> Result<Option<u64>, TestError> {
+        TestDispatcher.dispatch(permissions, subaction).await
+    }
+}
+
+#[async_trait::async_trait]
+impl<'a> CowInGenericHandler<'a> for LifetimeGenericDispatcher {
+    async fn handle(
+        &self,
+        permissions: &Permissions,
+        cow: Cow<'a, [u8]>,
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(52))
+    }
+}
+
+#[derive(Actionable, Debug)]
+#[actionable(actionable = crate)]
+enum LifetimeRequest<'a> {
+    #[actionable(protection = "none")]
+    Cow(Cow<'a, [u8]>),
+}
+
+#[derive(Dispatcher, Debug)]
+#[dispatcher(
+    input = LifetimeRequest<'a>,
+    actionable = crate
+)]
+struct LifetimeDispatcher;
+
+#[async_trait::async_trait]
+impl<'a> LifetimeRequestDispatcher<'a> for LifetimeDispatcher {
+    type Error = TestError;
+    type Output = Option<u64>;
+}
+
+#[async_trait::async_trait]
+impl<'a> CowHandler<'a> for LifetimeDispatcher {
+    async fn handle(
+        &self,
+        permissions: &Permissions,
+        cow: Cow<'a, [u8]>,
+    ) -> Result<Option<u64>, TestError> {
+        Ok(Some(52))
+    }
+}
+
 #[tokio::test]
 #[allow(clippy::too_many_lines)]
 async fn example() {
@@ -358,9 +431,10 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(&permissions, Request::UnprotectedStructParameter {
-                value: 42
-            },)
+            .dispatch(
+                &permissions,
+                Request::UnprotectedStructParameter { value: 42 },
+            )
             .await
             .unwrap(),
         Some(42)
@@ -381,9 +455,10 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
-                value: 42
-            },)
+            .dispatch(
+                &permissions,
+                Request::SimplyProtectedStructParameter { value: 42 },
+            )
             .await
             .unwrap(),
         Some(42)
@@ -397,9 +472,10 @@ async fn example() {
     );
     assert_eq!(
         dispatcher
-            .dispatch(&permissions, Request::CustomProtectedStructParameter {
-                value: 42
-            },)
+            .dispatch(
+                &permissions,
+                Request::CustomProtectedStructParameter { value: 42 },
+            )
             .await
             .unwrap(),
         Some(42)
@@ -437,9 +513,10 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(&permissions, Request::SimplyProtectedStructParameter {
-                value: 1
-            },)
+            .dispatch(
+                &permissions,
+                Request::SimplyProtectedStructParameter { value: 1 },
+            )
             .await,
         Err(TestError::PermissionDenied(_))
     ));
@@ -459,9 +536,10 @@ async fn example() {
     ));
     assert!(matches!(
         dispatcher
-            .dispatch(&permissions, Request::CustomProtectedStructParameter {
-                value: 1
-            },)
+            .dispatch(
+                &permissions,
+                Request::CustomProtectedStructParameter { value: 1 },
+            )
             .await,
         Err(TestError::CustomError)
     ));
@@ -544,4 +622,42 @@ fn allowed_actions_merging_tests() {
         &ResourceName::named("nested").and("started_with_some"),
         &TestActions::DoSomething
     ));
+}
+
+#[tokio::test]
+#[allow(clippy::too_many_lines)]
+async fn lifetimes() {
+    let permissions = Permissions::from(vec![Statement {
+        resources: vec![ResourceName::named(42)],
+        actions: ActionNameList::All,
+    }]);
+    let dispatcher = LifetimeDispatcher;
+    assert_eq!(
+        dispatcher
+            .dispatch(&permissions, LifetimeRequest::Cow(Cow::Borrowed(b"")))
+            .await
+            .unwrap(),
+        Some(52)
+    );
+    let dispatcher = LifetimeGenericDispatcher;
+    assert_eq!(
+        dispatcher
+            .dispatch(
+                &permissions,
+                LifetimeGenericRequest::CowInGeneric(Cow::Borrowed(b""))
+            )
+            .await
+            .unwrap(),
+        Some(52)
+    );
+    assert_eq!(
+        dispatcher
+            .dispatch(
+                &permissions,
+                LifetimeGenericRequest::LifetimeSub(Request::UnprotectedNoParameters)
+            )
+            .await
+            .unwrap(),
+        None
+    );
 }
