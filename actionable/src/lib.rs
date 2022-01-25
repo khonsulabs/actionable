@@ -64,6 +64,21 @@
 //! );
 //! ```
 //!
+//! ## Configuration
+//!
+//! Along with allowing actions to be taken, Actionable can be used to configure
+//! values that may change on a per-role basis. Rate limits are an example of
+//! what this API is designed to handle:
+//!
+//! ```rust
+//! # use actionable::{Permissions, Statement, ResourceName, Configuration};
+//! let permissions = Permissions::from(Statement::for_any().with("rate-limit", 500_u64));
+//! let effective_rate_limit = permissions
+//!     .get(&ResourceName::named("core-api"), "rate-limit")
+//!     .and_then(Configuration::to_unsigned);
+//! assert_eq!(effective_rate_limit, Some(500));
+//! ```
+//!
 //! ## Permission-driven async API
 //!
 //! At the core of many networked APIs written in Rust is an enum that
@@ -74,7 +89,9 @@
 //! the request.
 //!
 //! The goal of the API portion of this crate is to replace the aforementioned
-//! boilerplate match statement with a simple derive macro. For a commented example, check out [`actionable/examples/api-simulator.rs`](https://github.com/khonsulabs/actionable/blob/main/actionable/examples/api-simulator.rs).
+//! boilerplate match statement with a simple derive macro. For a commented
+//! example, check out
+//! [`actionable/examples/api-simulator.rs`](https://github.com/khonsulabs/actionable/blob/main/actionable/examples/api-simulator.rs).
 
 #![forbid(unsafe_code)]
 #![warn(
@@ -100,7 +117,7 @@ pub use self::{
     action::{Action, ActionName},
     dispatcher::Dispatcher,
     permissions::Permissions,
-    statement::{ActionNameList, Identifier, ResourceName, Statement},
+    statement::{ActionNameList, Configuration, Identifier, ResourceName, Statement},
 };
 
 #[cfg(test)]

@@ -1,5 +1,7 @@
 use std::{
     borrow::Cow,
+    collections::HashMap,
+    convert::TryFrom,
     fmt::{Display, Formatter, Write},
 };
 
@@ -10,22 +12,94 @@ use super::{Action, ActionName};
 /// A statement of permissions. A statement describes whether one or more
 /// `actions` should be `allowed` to be taken against `resources`.
 #[derive(Debug, Serialize, Deserialize)]
+#[must_use]
 pub struct Statement {
     /// The list of resources this statement applies to.
     pub resources: Vec<ResourceName<'static>>,
     /// The list of actions this statement applies to.
-    pub actions: ActionNameList,
+    pub actions: Option<ActionNameList>,
+    /// Any configured values for these resources.
+    pub configuration: Option<HashMap<String, Configuration>>,
 }
 
 impl Statement {
     /// Returns a statement that allows [`ActionNameList::All`] against
     /// [`ResourceName::any()`].
-    #[must_use]
-    pub fn allow_all() -> Self {
+    pub fn allow_all_for_any_resource() -> Self {
+        Self::for_any().allowing_all()
+    }
+
+    /// Returns an empty statement for a resource named `name`.
+    pub fn for_resource(name: impl Into<ResourceName<'static>>) -> Self {
+        Self {
+            resources: vec![name.into()],
+            actions: None,
+            configuration: None,
+        }
+    }
+
+    /// Returns an empty statement for [`ResourceName::any()`].
+    pub fn for_any() -> Self {
         Self {
             resources: vec![ResourceName::any()],
-            actions: ActionNameList::All,
+            actions: None,
+            configuration: None,
         }
+    }
+
+    /// Returns an empty statement for a resources named `names`.
+    pub fn for_resources<II: IntoIterator<Item = ResourceName<'static>>>(names: II) -> Self {
+        Self {
+            resources: names.into_iter().collect(),
+            actions: None,
+            configuration: None,
+        }
+    }
+
+    /// Allows `action` to be performed.
+    pub fn allow<A: Action>(&mut self, action: &A) {
+        match &mut self.actions {
+            Some(ActionNameList::All) => {}
+            Some(ActionNameList::List(names)) => {
+                names.push(action.name());
+            }
+            None => {
+                self.actions = Some(ActionNameList::List(vec![action.name()]));
+            }
+        }
+    }
+
+    /// Allows `action` and returns self.
+    pub fn allowing<A: Action>(mut self, action: &A) -> Self {
+        self.allow(action);
+        self
+    }
+
+    /// Allows [`ActionNameList::All`].
+    pub fn allow_all(&mut self) {
+        self.actions = Some(ActionNameList::All);
+    }
+
+    /// Allows [`ActionNameList::All`] and returns self.
+    pub fn allowing_all(mut self) -> Self {
+        self.allow_all();
+        self
+    }
+
+    /// Sets `configuration` for `key` for the resources in this statement.
+    pub fn configure<S: Into<String>, C: Into<Configuration>>(&mut self, key: S, configuration: C) {
+        let configurations = self.configuration.get_or_insert_with(HashMap::default);
+        configurations.insert(key.into(), configuration.into());
+    }
+
+    /// Configures `configuration` for `key` and returns self.
+    pub fn with<S: Into<String>, C: Into<Configuration>>(
+        mut self,
+        key: S,
+        configuration: C,
+    ) -> Self {
+        self.configure(key, configuration);
+        self
     }
 }
 
@@ -114,15 +188,72 @@ where
     }
 }
 
-impl From<ActionName> for ActionNameList {
-    fn from(name: ActionName) -> Self {
-        Self::List(vec![name])
+/// A configured value for a resource.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Configuration {
+    /// An unsigned integer configuration value.
+    Unsigned(u64),
+    /// A signed integer configuration value.
+    Signed(i64),
+    /// A string configuration value.
+    String(String),
+}
+
+impl Configuration {
+    /// Evaluates the contents of this configuration as a signed integer.
+    /// Returns None if unable to convert safely.
+    #[must_use]
+    pub fn to_signed(&self) -> Option<i64> {
+        match self {
+            Configuration::Unsigned(unsigned) => i64::try_from(*unsigned).ok(),
+            Configuration::Signed(signed) => Some(*signed),
+            Configuration::String(string) => string.parse().ok(),
+        }
+    }
+
+    /// Evaluates the contents of this configuration as an unsigned integer.
+    /// Returns None if unable to convert safely.
+    #[must_use]
+    pub fn to_unsigned(&self) -> Option<u64> {
+        match self {
+            Configuration::Unsigned(unsigned) => Some(*unsigned),
+            Configuration::Signed(signed) => u64::try_from(*signed).ok(),
+            Configuration::String(string) => string.parse().ok(),
+        }
     }
 }
 
-impl From<Vec<ActionName>> for ActionNameList {
-    fn from(names: Vec<ActionName>) -> Self {
-        Self::List(names)
+impl Display for Configuration {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Configuration::Unsigned(unsigned) => unsigned.fmt(f),
+            Configuration::Signed(signed) => signed.fmt(f),
+            Configuration::String(string) => string.fmt(f),
+        }
+    }
+}
+
+impl From<u64> for Configuration {
+    fn from(value: u64) -> Self {
+        Self::Unsigned(value)
+    }
+}
+
+impl From<i64> for Configuration {
+    fn from(value: i64) -> Self {
+        Self::Signed(value)
+    }
+}
+
+impl From<String> for Configuration {
+    fn from(value: String) -> Self {
+        Self::String(value)
+    }
+}
+
+impl<'a> From<&'a str> for Configuration {
+    fn from(value: &'a str) -> Self {
+        Self::String(value.to_string())
     }
 }
 
@@ -191,5 +322,17 @@ impl<'a> IntoIterator for ResourceName<'a> {
 impl<'b, 'a> From<&'b [Identifier<'a>]> for ResourceName<'a> {
     fn from(parts: &'b [Identifier<'a>]) -> Self {
         Self(parts.to_vec())
+    }
+}
+
+impl<'a> From<&'a str> for ResourceName<'a> {
+    fn from(name: &'a str) -> Self {
+        Self(vec![Identifier::from(name)])
+    }
+}
+
+impl<'a> From<u64> for ResourceName<'a> {
+    fn from(name: u64) -> Self {
+        Self(vec![Identifier::from(name)])
     }
 }

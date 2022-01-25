@@ -3,9 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use actionable::{
-    Action, ActionNameList, Actionable, Dispatcher, Permissions, ResourceName, Statement,
-};
+use actionable::{Action, Actionable, Dispatcher, Permissions, ResourceName, Statement};
 use async_trait::async_trait;
 use tokio::sync::Mutex;
 
@@ -158,22 +156,15 @@ async fn main() -> anyhow::Result<()> {
     // permissions, not hard-coding them like this.
 
     // "admin" can do anything
-    let admin_permissions = Permissions::from(vec![Statement {
-        resources: vec![ResourceName::any()],
-        actions: ActionNameList::All,
-    }]);
+    let admin_permissions = Permissions::allow_all();
 
     // Any user that is in the list can create other users.
-    let known_user_permissions = Permissions::from(vec![Statement {
-        resources: vec![ResourceName::any()],
-        actions: ActionNameList::from(ApiActions::AddUser),
-    }]);
+    let known_user_permissions =
+        Permissions::from(vec![Statement::for_any().allowing(&ApiActions::AddUser)]);
 
     // For inexplicable reasons, all unregistered users can delete jon
-    let default_permissions = Permissions::from(vec![Statement {
-        resources: vec![ResourceName::named("jon")],
-        actions: ActionNameList::from(ApiActions::DeleteUser),
-    }]);
+    let default_permissions =
+        Permissions::from(Statement::for_resource("jon").allowing(&ApiActions::DeleteUser));
 
     // Create our dispatcher, which is the server in this example.
     let dispatcher = Server {
