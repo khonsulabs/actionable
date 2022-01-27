@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Commands",""]],"fn":[["main",""]],"struct":[["CoverageConfig",""]]});
+initSidebarItems({"fn":[["main",""]],"struct":[["Config",""]]});
