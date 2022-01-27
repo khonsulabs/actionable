@@ -17,6 +17,12 @@ impl Action for () {
     }
 }
 
+impl Action for ActionName {
+    fn name(&self) -> ActionName {
+        self.clone()
+    }
+}
+
 /// A unique name of an action.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::module_name_repetitions)] // exported without the module name

@@ -3,8 +3,8 @@
 use std::borrow::Cow;
 
 use crate::{
-    Action, ActionName, ActionNameList, Actionable, Dispatcher, PermissionDenied, Permissions,
-    ResourceName, Statement,
+    Action, ActionName, Actionable, Dispatcher, PermissionDenied, Permissions, ResourceName,
+    Statement,
 };
 
 #[derive(Debug, Action)]
@@ -27,20 +27,12 @@ fn basics() {
     // Default action is deny
     let statements = vec![
         // Allow Read on all.
-        Statement {
-            resources: vec![ResourceName::any()],
-            actions: ActionNameList::from(TestActions::Post(PostActions::Read)),
-        },
+        Statement::for_any().allowing(&TestActions::Post(PostActions::Read)),
         // Allow all actions for the resource named all-actions-allowed
-        Statement {
-            resources: vec![ResourceName::named("all-actions-allowed")],
-            actions: ActionNameList::All,
-        },
+        Statement::for_resource("all-actions-allowed").allowing_all(),
         // Allow all Post actions for the resource named only-post-actions-allowed
-        Statement {
-            resources: vec![ResourceName::named("only-post-actions-allowed")],
-            actions: ActionNameList::from(ActionName(vec![Cow::Borrowed("Post")])),
-        },
+        Statement::for_resource("only-post-actions-allowed")
+            .allowing(&ActionName(vec![Cow::Borrowed("Post")])),
     ];
     let permissions = Permissions::from(statements);
 
@@ -82,13 +74,9 @@ fn multiple_actions() {
     // Default action is deny
     let statements = vec![
         // Allow Read on all.
-        Statement {
-            resources: vec![ResourceName::any()],
-            actions: ActionNameList::List(vec![
-                TestActions::Post(PostActions::Read).name(),
-                TestActions::Post(PostActions::Delete).name(),
-            ]),
-        },
+        Statement::for_any()
+            .allowing(&TestActions::Post(PostActions::Read))
+            .allowing(&TestActions::Post(PostActions::Delete)),
     ];
     let permissions = Permissions::from(statements);
 
@@ -342,10 +330,7 @@ impl NonGenericHandler for GenericDispatcher {
 #[tokio::test]
 #[allow(clippy::too_many_lines)]
 async fn example() {
-    let permissions = Permissions::from(vec![Statement {
-        resources: vec![ResourceName::named(42)],
-        actions: ActionNameList::All,
-    }]);
+    let permissions = Permissions::from(vec![Statement::for_resource(42).allowing_all()]);
     let dispatcher = TestDispatcher;
 
     // All success (permitted) cases
@@ -470,40 +455,21 @@ async fn example() {
 #[test]
 fn allowed_actions_merging_tests() {
     let permissions_a = Permissions::from(vec![
-        Statement {
-            resources: vec![ResourceName::named("started_with_all")],
-            actions: ActionNameList::All,
-        },
-        Statement {
-            resources: vec![ResourceName::named("started_with_some")],
-            actions: ActionNameList::from(vec![TestActions::DoSomething]),
-        },
-        Statement {
-            resources: vec![ResourceName::named("nested").and("started_with_all")],
-            actions: ActionNameList::All,
-        },
-        Statement {
-            resources: vec![ResourceName::named("nested").and("started_with_some")],
-            actions: ActionNameList::from(vec![TestActions::DoSomething]),
-        },
+        Statement::for_resource(ResourceName::named("started_with_all")).allowing_all(),
+        Statement::for_resource(ResourceName::named("started_with_some"))
+            .allowing(&TestActions::DoSomething),
+        Statement::for_resource(ResourceName::named("nested").and("started_with_all"))
+            .allowing_all(),
+        Statement::for_resource(ResourceName::named("nested").and("started_with_some"))
+            .allowing(&TestActions::DoSomething),
     ]);
     let permissions_b = Permissions::from(vec![
-        Statement {
-            resources: vec![ResourceName::named("started_with_none")],
-            actions: ActionNameList::All,
-        },
-        Statement {
-            resources: vec![ResourceName::named("started_with_some")],
-            actions: ActionNameList::All,
-        },
-        Statement {
-            resources: vec![ResourceName::named("nested").and("started_with_none")],
-            actions: ActionNameList::from(vec![TestActions::Post(PostActions::Read)]),
-        },
-        Statement {
-            resources: vec![ResourceName::named("nested").and("started_with_some")],
-            actions: ActionNameList::from(vec![TestActions::Post(PostActions::Read)]),
-        },
+        Statement::for_resource(ResourceName::named("started_with_none")).allowing_all(),
+        Statement::for_resource(ResourceName::named("started_with_some")).allowing_all(),
+        Statement::for_resource(ResourceName::named("nested").and("started_with_none"))
+            .allowing(&TestActions::Post(PostActions::Read)),
+        Statement::for_resource(ResourceName::named("nested").and("started_with_some"))
+            .allowing(&TestActions::Post(PostActions::Read)),
     ]);
 
     let merged = Permissions::merged([permissions_a, permissions_b].iter());
@@ -544,4 +510,92 @@ fn allowed_actions_merging_tests() {
         &ResourceName::named("nested").and("started_with_some"),
         &TestActions::DoSomething
     ));
+}
+
+#[test]
+fn configuration_tests() {
+    let permissions_a = Permissions::from(vec![
+        Statement::for_resource(ResourceName::named("a")).with("u64", 0_u64),
+        Statement::for_resource(ResourceName::named("a")).with("i64", i64::MIN),
+        Statement::for_resource(ResourceName::named("a").and("b")).with("i64", 2_i64),
+        Statement::for_any().with("global", "value"),
+    ]);
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a"), "u64")
+            .unwrap()
+            .to_unsigned(),
+        Some(0)
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a"), "u64")
+            .unwrap()
+            .to_signed(),
+        Some(0)
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a"), "u64")
+            .unwrap()
+            .to_string(),
+        "0"
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a"), "i64")
+            .unwrap()
+            .to_unsigned(),
+        None
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a"), "i64")
+            .unwrap()
+            .to_signed(),
+        Some(i64::MIN)
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a").and("b"), "i64")
+            .unwrap()
+            .to_signed(),
+        Some(2)
+    );
+
+    assert_eq!(
+        permissions_a
+            .get(&ResourceName::named("a").and("b"), "global")
+            .unwrap()
+            .to_string(),
+        "value"
+    );
+
+    let permissions_b = Permissions::from(vec![
+        Statement::for_resource(ResourceName::named("a")).with("newkey", "newvalue"),
+        Statement::for_any().with("global", "value2"),
+    ]);
+    let merged = Permissions::merged([&permissions_a, &permissions_b]);
+
+    assert_eq!(
+        merged
+            .get(&ResourceName::named("a").and("b"), "global")
+            .unwrap()
+            .to_string(),
+        "value"
+    );
+
+    assert_eq!(
+        merged
+            .get(&ResourceName::named("a").and("b"), "newkey")
+            .unwrap()
+            .to_string(),
+        "newvalue"
+    );
 }

@@ -2,7 +2,10 @@ use std::{collections::HashMap, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Action, ActionNameList, Identifier, PermissionDenied, ResourceName, Statement};
+use crate::{
+    statement::Configuration, Action, ActionNameList, Identifier, PermissionDenied, ResourceName,
+    Statement,
+};
 
 /// A collection of allowed permissions. This is constructed from a
 /// `Vec<`[`Statement`]`>`. By default, no actions are allowed on any resources.
@@ -15,6 +18,7 @@ pub struct Permissions {
 struct Data {
     children: Option<HashMap<Identifier<'static>, Data>>,
     allowed: AllowedActions,
+    configuration: Option<HashMap<String, Configuration>>,
 }
 
 impl Permissions {
@@ -22,7 +26,7 @@ impl Permissions {
     /// [`Statement::allow_all()`].
     #[must_use]
     pub fn allow_all() -> Self {
-        Self::from(vec![Statement::allow_all()])
+        Self::from(vec![Statement::allow_all_for_any_resource()])
     }
 
     /// Evaluate whether the `action` is allowed to be taken upon
@@ -58,10 +62,20 @@ impl Permissions {
         self.data.allowed_to(resource_name, action)
     }
 
+    /// Looks up a configured value for `resource_name`.
+    #[must_use]
+    pub fn get<'a: 's, 's, R: AsRef<[Identifier<'a>]>>(
+        &'s self,
+        resource_name: R,
+        key: &str,
+    ) -> Option<&'s Configuration> {
+        self.data.get(resource_name, key)
+    }
+
     /// Returns a new instance that merges all allowed actions from
     /// `permissions`.
     #[must_use]
-    pub fn merged<'a>(permissions: impl Iterator<Item = &'a Self>) -> Self {
+    pub fn merged<'a>(permissions: impl IntoIterator<Item = &'a Self>) -> Self {
         let mut combined = Data::default();
         for incoming in permissions {
             combined.add_permissions(&incoming.data);
@@ -83,6 +97,17 @@ impl Data {
         }
 
         self.allowed.add_allowed(&permissions.allowed);
+        if let Some(incoming_configuration) = &permissions.configuration {
+            if let Some(configuration) = &mut self.configuration {
+                for (key, value) in incoming_configuration {
+                    configuration
+                        .entry(key.clone())
+                        .or_insert_with(|| value.clone());
+                }
+            } else {
+                self.configuration = permissions.configuration.clone();
+            }
+        }
     }
 
     fn allowed_to<'a, R: AsRef<[Identifier<'a>]>, P: Action>(
@@ -136,6 +161,47 @@ impl Data {
         }
         matches!(allowed, AllowedActions::All)
     }
+
+    #[must_use]
+    pub fn get<'a: 's, 's, R: AsRef<[Identifier<'a>]>>(
+        &'s self,
+        resource_name: R,
+        key: &str,
+    ) -> Option<&'s Configuration> {
+        let resource_name = resource_name.as_ref();
+        // This function checks all possible matches of `resource_name` by using
+        // recursion to call itself for each entry in `resource_name`. This
+        // first block does the function call recursion. The second block checks
+        // `action`.
+        if let Some(resource) = resource_name.as_ref().first() {
+            if let Some(children) = &self.children {
+                let remaining_resource = &resource_name[1..resource_name.len()];
+                // Check if there are entries for this resource segment.
+                if let Some(permissions) = children.get(resource) {
+                    if let Some(config) = permissions.get(remaining_resource, key) {
+                        return Some(config);
+                    }
+                }
+
+                // Check if there are entries for `Any`.
+                if let Some(permissions) = children.get(&Identifier::Any) {
+                    if let Some(config) = permissions.get(remaining_resource, key) {
+                        return Some(config);
+                    }
+                }
+            }
+        }
+
+        self.configuration
+            .as_ref()
+            .and_then(|configs| configs.get(key))
+    }
+}
+
+impl From<Statement> for Permissions {
+    fn from(stmt: Statement) -> Self {
+        Self::from(vec![stmt])
+    }
 }
 
 impl From<Vec<Statement>> for Permissions {
@@ -155,7 +221,7 @@ impl From<Vec<Statement>> for Permissions {
 
                 // Apply the "allowed" status to each action in this resource.
                 match &statement.actions {
-                    ActionNameList::List(actions) =>
+                    Some(ActionNameList::List(actions)) =>
                         for action in actions {
                             let mut allowed = &mut current_permissions.allowed;
                             for name in &action.0 {
@@ -179,8 +245,20 @@ impl From<Vec<Statement>> for Permissions {
                             }
                             *allowed = AllowedActions::All;
                         },
-                    ActionNameList::All => {
+                    Some(ActionNameList::All) => {
                         current_permissions.allowed = AllowedActions::All;
+                    }
+                    None => {}
+                }
+
+                if let Some(incoming_configs) = &statement.configuration {
+                    let configuration = current_permissions
+                        .configuration
+                        .get_or_insert_with(HashMap::default);
+                    for (key, value) in incoming_configs {
+                        configuration
+                            .entry(key.clone())
+                            .or_insert_with(|| value.clone());
                     }
                 }
             }
