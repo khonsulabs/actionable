@@ -350,7 +350,7 @@
 
 <span class="doccomment">/// A statement of permissions. A statement describes whether one or more</span>
 <span class="doccomment">/// `actions` should be `allowed` to be taken against `resources`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Statement</span> {
     <span class="doccomment">/// The list of resources this statement applies to.</span>
@@ -501,7 +501,7 @@
 }
 
 <span class="doccomment">/// A list of [`ActionName`]s.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ActionNameList</span> {
     <span class="doccomment">/// A specific list of names.</span>
     <span class="ident">List</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ActionName</span><span class="op">&gt;</span>),
