@@ -11,7 +11,7 @@ use super::{Action, ActionName};
 
 /// A statement of permissions. A statement describes whether one or more
 /// `actions` should be `allowed` to be taken against `resources`.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[must_use]
 pub struct Statement {
     /// The list of resources this statement applies to.
@@ -162,7 +162,7 @@ impl<'a> From<String> for Identifier<'a> {
 }
 
 /// A list of [`ActionName`]s.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ActionNameList {
     /// A specific list of names.
     List(Vec<ActionName>),
