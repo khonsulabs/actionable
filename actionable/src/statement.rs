@@ -3,6 +3,7 @@ use std::{
     collections::HashMap,
     convert::TryFrom,
     fmt::{Display, Formatter, Write},
+    hash::Hash,
 };
 
 use serde::{Deserialize, Serialize};
@@ -104,7 +105,7 @@ impl Statement {
 }
 
 /// A single element of a [`ResourceName`]
-#[derive(Debug, Hash, Eq, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Identifier<'a> {
     /// When checking for allowed permissions, allow any match where this
     /// identifier is used.
@@ -113,6 +114,68 @@ pub enum Identifier<'a> {
     Integer(u64),
     /// A string identifier.
     String(Cow<'a, str>),
+    /// A binary identifier.
+    Bytes(Cow<'a, [u8]>),
+}
+
+impl<'a> Hash for Identifier<'a> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        // To ensure matching the implementation of Eq, we need to hash
+        // everything to bytes in the same way they would be compared.
+        match self {
+            Identifier::Any => {
+                // We get to pick an arbitrary hash for this value. It only
+                // needs to be self consistent. A null byte is likely to be
+                // unique in terms of produced hash values.
+                state.write_u8(0);
+            }
+            Identifier::Integer(int) => {
+                state.write(&int.to_be_bytes());
+            }
+            Identifier::String(string) => {
+                state.write(string.as_bytes());
+            }
+            Identifier::Bytes(bytes) => {
+                state.write(bytes);
+            }
+        }
+    }
+}
+
+#[test]
+fn identifier_hash_tests() {
+    fn hash(identifier: &Identifier<'_>) -> u64 {
+        use std::hash::Hasher;
+        let mut hasher = std::collections::hash_map::DefaultHasher::default();
+        identifier.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    let integer_a = Identifier::from(u64::from_be_bytes(*b"helloooo"));
+    let string_a = Identifier::from("helloooo");
+    let bytes_a = Identifier::from(b"helloooo");
+    let string_b = Identifier::from("woooorld");
+
+    assert_eq!(hash(&Identifier::Any), hash(&Identifier::Any));
+    assert_eq!(hash(&string_a), hash(&string_a));
+    assert_eq!(hash(&integer_a), hash(&string_a));
+    assert_eq!(hash(&bytes_a), hash(&string_a));
+    assert_ne!(hash(&string_a), hash(&string_b));
+    assert_ne!(hash(&integer_a), hash(&string_b));
+    assert_ne!(hash(&bytes_a), hash(&string_b));
+}
+
+impl<'a> Eq for Identifier<'a> {}
+
+impl<'a> PartialEq for Identifier<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        match other {
+            Self::Any => matches!(self, Self::Any),
+            Self::Integer(int) => self.eq_int(*int),
+            Self::String(string) => self.eq_str(string),
+            Self::Bytes(bytes) => self.eq_bytes(bytes),
+        }
+    }
 }
 
 impl<'a> Identifier<'a> {
@@ -123,8 +186,91 @@ impl<'a> Identifier<'a> {
             Self::Any => Identifier::Any,
             Self::Integer(value) => Identifier::Integer(*value),
             Self::String(value) => Identifier::String(Cow::Owned(value.to_string())),
+            Self::Bytes(value) => Identifier::Bytes(Cow::Owned(value.to_vec())),
         }
     }
+
+    fn eq_int(&self, other: u64) -> bool {
+        match self {
+            Identifier::Any => false,
+            Identifier::Integer(int) => *int == other,
+            Identifier::String(string) => {
+                let other = other.to_be_bytes();
+                string.as_bytes() == other
+            }
+            Identifier::Bytes(bytes) => {
+                let other = other.to_be_bytes();
+                **bytes == other
+            }
+        }
+    }
+
+    fn eq_str(&self, other: &str) -> bool {
+        match self {
+            Identifier::Any => false,
+            Identifier::Integer(int) => {
+                let int = int.to_be_bytes();
+                int == other.as_bytes()
+            }
+            Identifier::String(string) => string == other,
+            Identifier::Bytes(bytes) => &**bytes == other.as_bytes(),
+        }
+    }
+
+    fn eq_bytes(&self, other: &[u8]) -> bool {
+        match self {
+            Identifier::Any => false,
+            Identifier::Integer(int) => {
+                let int = int.to_be_bytes();
+                int == other
+            }
+            Identifier::String(string) => string.as_bytes() == other,
+            Identifier::Bytes(bytes) => &**bytes == other,
+        }
+    }
+}
+
+#[test]
+fn identifier_equality_tests() {
+    let integer_a = Identifier::from(u64::from_be_bytes(*b"helloooo"));
+    let integer_b = Identifier::from(u64::from_be_bytes(*b"woooorld"));
+    let string_a = Identifier::from("helloooo");
+    let string_b = Identifier::from("woooorld");
+    let bytes_a = Identifier::from(b"helloooo");
+    let bytes_b = Identifier::from(b"woooorld");
+
+    // Integer on left
+    assert_ne!(integer_a, Identifier::Any);
+    assert_eq!(integer_a, integer_a);
+    assert_eq!(integer_a, string_a);
+    assert_eq!(integer_a, bytes_a);
+    assert_ne!(integer_a, integer_b);
+    assert_ne!(integer_a, string_b);
+    assert_ne!(integer_a, bytes_b);
+
+    // String on left
+    assert_ne!(string_a, Identifier::Any);
+    assert_eq!(string_a, integer_a);
+    assert_eq!(string_a, string_a);
+    assert_eq!(string_a, bytes_a);
+    assert_ne!(string_a, integer_b);
+    assert_ne!(string_a, string_b);
+    assert_ne!(string_a, bytes_b);
+
+    // Bytes on left
+    assert_ne!(bytes_a, Identifier::Any);
+    assert_eq!(bytes_a, integer_a);
+    assert_eq!(bytes_a, string_a);
+    assert_eq!(bytes_a, bytes_a);
+    assert_ne!(bytes_a, integer_b);
+    assert_ne!(bytes_a, string_b);
+    assert_ne!(bytes_a, bytes_b);
+
+    // Any on left
+    assert_eq!(Identifier::Any, Identifier::Any);
+    assert_ne!(Identifier::Any, integer_a);
+    assert_ne!(Identifier::Any, string_a);
+    assert_ne!(Identifier::Any, bytes_a);
 }
 
 impl<'a> Display for Identifier<'a> {
@@ -133,8 +279,23 @@ impl<'a> Display for Identifier<'a> {
             Self::Any => f.write_char('*'),
             Self::Integer(integer) => integer.fmt(f),
             Self::String(string) => string.fmt(f),
+            Self::Bytes(bytes) => {
+                f.write_char('$')?;
+                for byte in bytes.iter() {
+                    write!(f, "{:02x}", byte)?;
+                }
+                Ok(())
+            }
         }
     }
+}
+
+#[test]
+fn identifier_display_tests() {
+    assert_eq!(Identifier::Any.to_string(), "*");
+    assert_eq!(Identifier::from(1).to_string(), "1");
+    assert_eq!(Identifier::from("string").to_string(), "string");
+    assert_eq!(Identifier::from(b"bytes").to_string(), "$6279746573");
 }
 
 impl<'a> From<u64> for Identifier<'a> {
@@ -159,6 +320,58 @@ impl<'a> From<String> for Identifier<'a> {
     fn from(id: String) -> Self {
         Self::String(Cow::Owned(id))
     }
+}
+
+impl<'a, const N: usize> From<&'a [u8; N]> for Identifier<'a> {
+    fn from(id: &'a [u8; N]) -> Self {
+        Self::from(&id[..])
+    }
+}
+
+impl<'a, const N: usize> From<[u8; N]> for Identifier<'a> {
+    fn from(id: [u8; N]) -> Self {
+        Self::from(id.to_vec())
+    }
+}
+
+impl<'a> From<&'a [u8]> for Identifier<'a> {
+    fn from(id: &'a [u8]) -> Self {
+        Self::Bytes(Cow::Borrowed(id))
+    }
+}
+
+impl<'a> From<&'a Vec<u8>> for Identifier<'a> {
+    fn from(id: &'a Vec<u8>) -> Self {
+        Self::from(id.clone())
+    }
+}
+
+impl<'a> From<Vec<u8>> for Identifier<'a> {
+    fn from(id: Vec<u8>) -> Self {
+        Self::Bytes(Cow::Owned(id))
+    }
+}
+
+#[test]
+fn identifier_from_tests() {
+    assert_eq!(Identifier::from(1).to_string(), "1");
+    assert_eq!(Identifier::from("string").to_string(), "string");
+    assert_eq!(
+        Identifier::from(&String::from("string")).to_string(),
+        "string"
+    );
+    assert_eq!(
+        Identifier::from(String::from("string")).to_string(),
+        "string"
+    );
+    // This calls through to from(&[u8])
+    assert_eq!(Identifier::from(b"bytes").to_string(), "$6279746573");
+    // This calls through to from(Vec<u8>)
+    assert_eq!(Identifier::from(*b"bytes").to_string(), "$6279746573");
+    assert_eq!(
+        Identifier::from(&b"bytes".to_vec()).to_string(),
+        "$6279746573"
+    );
 }
 
 /// A list of [`ActionName`]s.
