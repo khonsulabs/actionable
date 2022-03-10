@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Breaking Changes
+
+- This crate now defaults to non-async code. `Dispatcher` has been renamed to
+  `AsyncDispatcher`, and a new trait named `Dispatcher` has been added that is
+  not async. The `Actionable` derive macro has a new parameter, `async`, which
+  generates handler traits that contain async function definitions.
+
+  Updating existing code should be straightforward: add `async` to the
+  `Actionable` derive:
+
+  ```rust
+  #[derive(Actionable, Debug)]
+  #[actionable(async)]
+  enum MyRequest {}
+  ```
+
+  And switch from deriving `Dispatcher` to deriving `AsyncDispatcher`.
+
 ## 0.2.0
 
 ### Added

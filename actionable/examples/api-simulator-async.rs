@@ -1,9 +1,11 @@
 use std::{
     io::{self, BufRead},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
-use actionable::{Action, Actionable, Dispatcher, Permissions, ResourceName, Statement};
+use actionable::{Action, Actionable, AsyncDispatcher, Permissions, ResourceName, Statement};
+use async_trait::async_trait;
+use tokio::sync::Mutex;
 
 /// This enum is what a "client" will send the "server" in our API.
 // The derive(Actionable) macro is generating multiple traits for our "server"
@@ -18,6 +20,7 @@ use actionable::{Action, Actionable, Dispatcher, Permissions, ResourceName, Stat
 // * `DeleteUserHandler`: A trait that defines the function invoked when a `DeleteUser` request is
 //   dispatched.
 #[derive(Actionable, Debug)]
+#[actionable(async)]
 pub enum ApiRequest {
     /// An unprotected API request with no permissions checks
     #[actionable(protection = "none")]
@@ -49,7 +52,7 @@ enum ApiActions {
 }
 
 /// This type contains the state of the "server": a list of users.
-#[derive(Dispatcher, Debug)]
+#[derive(AsyncDispatcher, Debug)]
 #[dispatcher(input = ApiRequest)]
 struct Server {
     users: Arc<Mutex<Vec<String>>>,
@@ -62,9 +65,10 @@ impl ApiRequestDispatcher for Server {
 }
 
 /// Handles `ApiRequest::ListUsers`
+#[async_trait]
 impl ListUsersHandler for Server {
-    fn handle(&self, _permissions: &Permissions) -> anyhow::Result<ApiResponse> {
-        let users = self.users.lock().unwrap();
+    async fn handle(&self, _permissions: &Permissions) -> anyhow::Result<ApiResponse> {
+        let users = self.users.lock().await;
         println!("Current users:");
         for user in users.iter() {
             println!("{}", user)
@@ -75,8 +79,9 @@ impl ListUsersHandler for Server {
 }
 
 /// Handles `ApiRequest::AddUser`
+#[async_trait]
 impl AddUserHandler for Server {
-    fn verify_permissions(
+    async fn verify_permissions(
         &self,
         permissions: &Permissions,
         username: &String,
@@ -92,12 +97,12 @@ impl AddUserHandler for Server {
         }
     }
 
-    fn handle_protected(
+    async fn handle_protected(
         &self,
         _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<ApiResponse> {
-        let mut users = self.users.lock().unwrap();
+        let mut users = self.users.lock().await;
         users.push(username);
         users.sort();
         println!("User added.");
@@ -106,10 +111,11 @@ impl AddUserHandler for Server {
 }
 
 /// Handles `ApiRequest::DeleteUser`
+#[async_trait]
 impl DeleteUserHandler for Server {
     type Action = ApiActions;
 
-    fn resource_name<'a>(&'a self, username: &'a String) -> anyhow::Result<ResourceName<'a>> {
+    async fn resource_name<'a>(&'a self, username: &'a String) -> anyhow::Result<ResourceName<'a>> {
         Ok(ResourceName::named(username.clone()))
     }
 
@@ -117,12 +123,12 @@ impl DeleteUserHandler for Server {
         ApiActions::DeleteUser
     }
 
-    fn handle_protected(
+    async fn handle_protected(
         &self,
         _permissions: &Permissions,
         username: String,
     ) -> anyhow::Result<ApiResponse> {
-        let mut users = self.users.lock().unwrap();
+        let mut users = self.users.lock().await;
         let old_len = users.len();
         users.retain(|u| u != &username);
 
@@ -136,7 +142,8 @@ impl DeleteUserHandler for Server {
     }
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     // The initial set of users known in the system.
     let users = vec![
         String::from("admin"),
@@ -176,7 +183,7 @@ fn main() -> anyhow::Result<()> {
         let effective_permissions = if name == "admin" {
             &admin_permissions
         } else {
-            let users = dispatcher.users.lock().unwrap();
+            let users = dispatcher.users.lock().await;
             if users.contains(&name) {
                 &known_user_permissions
             } else {
@@ -214,7 +221,7 @@ fn main() -> anyhow::Result<()> {
         };
 
         // Dispatch the request. The appropriate handler will be invoked.
-        if let Err(err) = dispatcher.dispatch(effective_permissions, request) {
+        if let Err(err) = dispatcher.dispatch(effective_permissions, request).await {
             println!("Error received: {:?}", err);
         }
     }

@@ -101,6 +101,7 @@
     future_incompatible,
     rust_2018_idioms
 )]
+#![allow(clippy::module_name_repetitions)]
 #![cfg_attr(doc, deny(rustdoc::all))]
 
 mod action;
@@ -115,7 +116,7 @@ use serde::{Deserialize, Serialize};
 
 pub use self::{
     action::{Action, ActionName},
-    dispatcher::Dispatcher,
+    dispatcher::{AsyncDispatcher, Dispatcher},
     permissions::Permissions,
     statement::{ActionNameList, Configuration, Identifier, ResourceName, Statement},
 };

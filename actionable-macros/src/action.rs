@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
 
-use crate::{Actionable, ActionableArgs};
+use crate::ActionableArgs;
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(supports(enum_any))]
@@ -16,7 +16,7 @@ struct Action {
 
     /// Overrides the crate name for `actionable` references.
     #[darling(skip)]
-    actionable: Option<Actionable>,
+    actionable: Option<ActionableArgs>,
 }
 
 #[derive(Debug, FromVariant)]
@@ -37,8 +37,11 @@ impl ToTokens for Action {
             .take_enum()
             .expect("Expected enum in data");
 
-        let actionable = self.actionable.clone().map_or_else(
-            || {
+        let actionable = self
+            .actionable
+            .as_ref()
+            .and_then(|args| args.actionable.clone())
+            .unwrap_or_else(|| {
                 let mut segments = syn::punctuated::Punctuated::new();
                 segments.push_value(syn::PathSegment {
                     ident: syn::Ident::new("actionable", name.span()),
@@ -48,9 +51,7 @@ impl ToTokens for Action {
                     leading_colon: None,
                     segments,
                 }
-            },
-            |a| a.0,
-        );
+            });
         let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
         let variants = enum_data.into_iter().map(|variant| {
@@ -103,7 +104,7 @@ pub fn derive(input: &syn::DeriveInput) -> Result<TokenStream, darling::Error> {
         .find(|attr| attr.path.segments.first().unwrap().ident == "action")
     {
         let args: ActionableArgs = syn::parse2(attr.tokens.clone())?;
-        actionable.actionable = args.0;
+        actionable.actionable = Some(args);
     }
 
     Ok(actionable.into_token_stream())

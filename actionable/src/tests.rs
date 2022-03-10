@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use crate::{
-    Action, ActionName, Actionable, Dispatcher, PermissionDenied, Permissions, ResourceName,
+    Action, ActionName, Actionable, AsyncDispatcher, PermissionDenied, Permissions, ResourceName,
     Statement,
 };
 
@@ -98,7 +98,7 @@ fn multiple_actions() {
 }
 
 #[derive(Actionable, Debug)]
-#[actionable(actionable = crate)]
+#[actionable(actionable = crate, async)]
 enum Request {
     #[actionable(protection = "none")]
     UnprotectedNoParameters,
@@ -122,7 +122,7 @@ enum Request {
     CustomProtectedStructParameter { value: u64 },
 }
 
-#[derive(Dispatcher, Debug)]
+#[derive(AsyncDispatcher, Debug)]
 #[dispatcher(input = Request, actionable = crate)]
 struct TestDispatcher;
 
@@ -290,7 +290,7 @@ impl CustomProtectedStructParameterHandler for TestDispatcher {
 }
 
 #[derive(Actionable, Debug)]
-#[actionable(actionable = crate)]
+#[actionable(actionable = crate, async)]
 enum GenericRequest<T> {
     #[actionable(protection = "none")]
     NonGeneric,
@@ -298,7 +298,7 @@ enum GenericRequest<T> {
     Sub(T),
 }
 
-#[derive(Dispatcher, Debug)]
+#[derive(AsyncDispatcher, Debug)]
 #[dispatcher(
     input = GenericRequest<Request>,
     actionable = crate

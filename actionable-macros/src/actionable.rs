@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use proc_macro_error::abort;
 use quote::{quote, quote_spanned};
 
-use crate::{actionable, Actionable as CrateAlias, ActionableArgs};
+use crate::{actionable, ActionableArgs};
 
 #[derive(Debug, FromDeriveInput)]
 #[darling(supports(enum_any))]
@@ -16,7 +16,7 @@ struct Actionable {
 
     /// Overrides the crate name for `actionable` references.
     #[darling(skip)]
-    actionable: Option<CrateAlias>,
+    actionable: Option<ActionableArgs>,
 }
 
 #[derive(Debug, FromMeta)]
@@ -62,14 +62,18 @@ struct Handler {
     parameters: Vec<syn::Ident>,
 }
 
+struct Context<'a> {
+    enum_name: &'a syn::Ident,
+    generated_dispatcher_name: &'a syn::Ident,
+    pub_tokens: &'a TokenStream,
+    actionable: &'a syn::Path,
+    async_keyword: &'a TokenStream,
+    await_suffix: &'a TokenStream,
+    async_trait_attribute: &'a TokenStream,
+}
+
 impl Variant {
-    pub fn generate_code(
-        &self,
-        enum_name: &syn::Ident,
-        generated_dispatcher_name: &syn::Ident,
-        pub_tokens: &TokenStream,
-        actionable: &syn::Path,
-    ) -> VariantResult {
+    pub fn generate_code(&self, context: &Context<'_>) -> VariantResult {
         let variant_name = &self.ident;
         let handler_name =
             syn::Ident::new(&format!("{}Handler", variant_name), variant_name.span());
@@ -107,12 +111,10 @@ impl Variant {
         } else {
             self.generate_handler(
                 &handler_name,
-                generated_dispatcher_name,
                 &enum_parameters,
                 &method_parameters,
                 &byref_method_parameters,
-                pub_tokens,
-                actionable,
+                context,
             )
         };
 
@@ -121,7 +123,7 @@ impl Variant {
             &handler_name,
             &enum_parameters,
             &handler.parameters,
-            enum_name,
+            context,
         );
 
         let handler = if self.subaction {
@@ -146,12 +148,10 @@ impl Variant {
     fn generate_handler(
         &self,
         handler_name: &syn::Ident,
-        generated_dispatcher_name: &syn::Ident,
         enum_parameters: &[syn::Ident],
         method_parameters: &[TokenStream],
         byref_method_parameters: &[TokenStream],
-        pub_tokens: &TokenStream,
-        actionable: &syn::Path,
+        context: &Context<'_>,
     ) -> Handler {
         let variant_name = &self.ident;
 
@@ -159,16 +159,19 @@ impl Variant {
         handle_parameters.insert(0, syn::Ident::new("self", variant_name.span()));
         handle_parameters.insert(1, syn::Ident::new("permissions", variant_name.span()));
 
+        let generated_dispatcher_name = context.generated_dispatcher_name;
         let self_as_dispatcher = quote! {<Self as #generated_dispatcher_name>};
         let result_type = quote!(Result<
             #self_as_dispatcher::Output,
             #self_as_dispatcher::Error
         >);
-
+        let async_keyword = context.async_keyword;
+        let actionable = context.actionable;
+        let await_suffix = context.await_suffix;
         let implementation = match self.protection {
             Protection::None => quote! {
                 #[allow(clippy::too_many_arguments)]
-                async fn handle(
+                #async_keyword fn handle(
                     &self,
                     permissions: &#actionable::Permissions,
                     #(#method_parameters),*
@@ -177,24 +180,24 @@ impl Variant {
             Protection::Simple => {
                 quote! {
                     #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
-                    async fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
+                    #async_keyword fn resource_name<'a>(&'a self,#(#byref_method_parameters),*) -> Result<#actionable::ResourceName<'a>, #self_as_dispatcher::Error>;
                     type Action: #actionable::Action;
                     fn action() -> Self::Action;
 
                     #[allow(clippy::too_many_arguments)]
-                    async fn handle(
+                    #async_keyword fn handle(
                         &self,
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
-                        let resource = self.resource_name(#(&#enum_parameters),*).await?;
+                        let resource = self.resource_name(#(&#enum_parameters),*)#await_suffix?;
                         let action = Self::action();
                         permissions.check(&resource, &action)?;
-                        self.handle_protected(permissions, #(#enum_parameters),*).await
+                        self.handle_protected(permissions, #(#enum_parameters),*)#await_suffix
                     }
 
                     #[allow(clippy::too_many_arguments)]
-                    async fn handle_protected(
+                    #async_keyword fn handle_protected(
                         &self,
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
@@ -204,20 +207,20 @@ impl Variant {
             Protection::Custom => {
                 quote! {
                     #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
-                    async fn verify_permissions(&self, permissions: &#actionable::Permissions, #(#byref_method_parameters),*) -> Result<(), #self_as_dispatcher::Error>;
+                    #async_keyword fn verify_permissions(&self, permissions: &#actionable::Permissions, #(#byref_method_parameters),*) -> Result<(), #self_as_dispatcher::Error>;
 
                     #[allow(clippy::too_many_arguments)]
-                    async fn handle(
+                    #async_keyword fn handle(
                         &self,
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
                     ) -> #result_type {
-                        self.verify_permissions(permissions, #(&#enum_parameters),*).await?;
-                        self.handle_protected(permissions, #(#enum_parameters),*).await
+                        self.verify_permissions(permissions, #(&#enum_parameters),*)#await_suffix?;
+                        self.handle_protected(permissions, #(#enum_parameters),*)#await_suffix
                     }
 
                     #[allow(clippy::too_many_arguments)]
-                    async fn handle_protected(
+                    #async_keyword fn handle_protected(
                         &self,
                         permissions: &#actionable::Permissions,
                         #(#method_parameters),*
@@ -226,11 +229,13 @@ impl Variant {
             }
         };
 
+        let async_trait_attribute = context.async_trait_attribute;
+        let pub_tokens = context.pub_tokens;
         Handler {
             parameters: handle_parameters,
             tokens: quote_spanned! {
                 variant_name.span() =>
-                    #[#actionable::async_trait]
+                    #async_trait_attribute
                     #[doc(hidden)]
                     #pub_tokens trait #handler_name: #generated_dispatcher_name  {
                         #implementation
@@ -245,31 +250,33 @@ impl Variant {
         handler_name: &syn::Ident,
         enum_parameters: &[syn::Ident],
         handle_parameters: &[syn::Ident],
-        enum_name: &syn::Ident,
+        context: &Context<'_>,
     ) -> TokenStream {
         let variant_name = &self.ident;
+        let enum_name = context.enum_name;
+        let await_suffix = context.await_suffix;
         if self.subaction {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name(arg0) => {
-                    self.handle_subaction(permissions, #(#enum_parameters),*).await
+                    self.handle_subaction(permissions, #(#enum_parameters),*)#await_suffix
                 },
             }
         } else if is_struct_style {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name{#(#enum_parameters),*} => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name>::handle(#(#handle_parameters),*)#await_suffix
                 },
             }
         } else if self.fields.is_empty() {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name>::handle(#(#handle_parameters),*)#await_suffix
                 }
             }
         } else {
             quote_spanned! {
                 variant_name.span() => #enum_name::#variant_name(#(#enum_parameters),*) => {
-                    <Self as #handler_name>::handle(#(#handle_parameters),*).await
+                    <Self as #handler_name>::handle(#(#handle_parameters),*)#await_suffix
                 },
             }
         }
@@ -297,7 +304,8 @@ impl ToTokens for Actionable {
             _ => TokenStream::default(),
         };
 
-        let actionable = actionable(self.actionable.clone().map(|a| a.0), enum_name.span());
+        let args = self.actionable.clone().unwrap_or_default();
+        let actionable = actionable(args.actionable, enum_name.span());
 
         let mut handlers = Vec::new();
         let mut handler_names = Vec::new();
@@ -308,13 +316,28 @@ impl ToTokens for Actionable {
 
         let mut subaction = false;
 
+        let (async_keyword, await_suffix, async_trait_attribute) = if args.asynchronous {
+            (
+                quote!(async),
+                quote!(.await),
+                quote!(#[#actionable::async_trait]),
+            )
+        } else {
+            (quote!(), quote!(), quote!())
+        };
+
+        let context = Context {
+            enum_name,
+            generated_dispatcher_name: &generated_dispatcher_name,
+            pub_tokens: &pub_tokens,
+            actionable: &actionable,
+            async_keyword: &async_keyword,
+            await_suffix: &await_suffix,
+            async_trait_attribute: &async_trait_attribute,
+        };
+
         for variant in enum_data {
-            let result = variant.generate_code(
-                enum_name,
-                &generated_dispatcher_name,
-                &pub_tokens,
-                &actionable,
-            );
+            let result = variant.generate_code(&context);
             match result.handler {
                 VariantHandler::Subaction => {
                     if subaction {
@@ -333,20 +356,20 @@ impl ToTokens for Actionable {
         let (subaction_type, subaction_handler) = if subaction {
             (quote!(<Self::Subaction>), quote! {
                 type Subaction: Send;
-                async fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
+                #async_keyword fn handle_subaction(&self, permissions: &#actionable::Permissions, subaction: Self::Subaction) -> Result<Self::Output, Self::Error>;
             })
         } else {
             (TokenStream::default(), TokenStream::default())
         };
 
         tokens.extend(quote! {
-            #[#actionable::async_trait]
+            #async_trait_attribute
             #[doc(hidden)]
             #pub_tokens trait #generated_dispatcher_name: Send + Sync {
                 type Output: Send + Sync;
                 type Error: From<#actionable::PermissionDenied> + Send + Sync;
 
-                async fn dispatch_to_handlers(&self, permissions: &#actionable::Permissions, request: #enum_name#subaction_type) -> Result<Self::Output, Self::Error>
+                #async_keyword fn dispatch_to_handlers(&self, permissions: &#actionable::Permissions, request: #enum_name#subaction_type) -> Result<Self::Output, Self::Error>
                 where Self: #(#handler_names)+* {
                     match request {
                         #(#match_cases)*
@@ -370,7 +393,7 @@ pub fn derive(input: &syn::DeriveInput) -> Result<TokenStream, darling::Error> {
         .find(|attr| attr.path.segments.first().unwrap().ident == "actionable")
     {
         let args: ActionableArgs = syn::parse2(attr.tokens.clone())?;
-        actionable.actionable = args.0;
+        actionable.actionable = Some(args);
     }
 
     Ok(actionable.into_token_stream())

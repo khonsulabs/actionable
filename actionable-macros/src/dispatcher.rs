@@ -21,6 +21,7 @@ struct Dispatcher {
 struct Args {
     inputs: Vec<syn::Path>,
     actionable: Option<syn::Path>,
+    asynchronous: bool,
 }
 
 impl Parse for Args {
@@ -52,6 +53,18 @@ impl ToTokens for Dispatcher {
 
         let actionable = actionable(args.actionable.clone(), type_name.span());
 
+        let (dispatcher_trait, async_keyword, await_suffix, async_trait_attribute) =
+            if args.asynchronous {
+                (
+                    quote!(AsyncDispatcher),
+                    quote!(async),
+                    quote!(.await),
+                    quote!(#[#actionable::async_trait]),
+                )
+            } else {
+                (quote!(Dispatcher), quote!(), quote!(), quote!())
+            };
+
         let (impl_generics, type_generics, where_clause) = self.generics.split_for_impl();
 
         for enum_type in &args.inputs {
@@ -61,12 +74,12 @@ impl ToTokens for Dispatcher {
             );
 
             tokens.extend(quote! {
-                #[#actionable::async_trait]
-                impl#impl_generics #actionable::Dispatcher<#enum_type> for #type_name#type_generics #where_clause {
+                #async_trait_attribute
+                impl#impl_generics #actionable::#dispatcher_trait<#enum_type> for #type_name#type_generics #where_clause {
                     type Result = Result<<Self as #generated_dispatcher_name>::Output,<Self as #generated_dispatcher_name>::Error>;
 
-                    async fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_type) -> Self::Result {
-                        #generated_dispatcher_name::dispatch_to_handlers(self, permissions, request).await
+                    #async_keyword fn dispatch(&self, permissions: &#actionable::Permissions, request: #enum_type) -> Self::Result {
+                        #generated_dispatcher_name::dispatch_to_handlers(self, permissions, request)#await_suffix
                     }
                 }
             });
@@ -75,7 +88,7 @@ impl ToTokens for Dispatcher {
 }
 
 #[allow(clippy::redundant_pub_crate)] // Error is a private type
-pub(crate) fn derive(input: &syn::DeriveInput) -> Result<TokenStream, Error> {
+pub(crate) fn derive(input: &syn::DeriveInput, asynchronous: bool) -> Result<TokenStream, Error> {
     let mut dispatcher = Dispatcher::from_derive_input(input)?;
     let attr = match input
         .attrs
@@ -85,7 +98,9 @@ pub(crate) fn derive(input: &syn::DeriveInput) -> Result<TokenStream, Error> {
         Some(attr) => attr,
         None => abort!(input.ident, "missing `dispatcher` attribute"),
     };
-    dispatcher.args = Some(syn::parse2(attr.tokens.clone())?);
+    let mut args: Args = syn::parse2(attr.tokens.clone())?;
+    args.asynchronous = asynchronous;
+    dispatcher.args = Some(args);
     Ok(dispatcher.into_token_stream())
 }
 
@@ -97,10 +112,15 @@ enum Arg {
 impl Parse for Arg {
     fn parse(input: &'_ syn::parse::ParseBuffer<'_>) -> syn::Result<Self> {
         let ident: syn::Ident = input.parse()?;
-        let _: syn::Token![=] = input.parse()?;
         match ident.to_string().as_str() {
-            "actionable" => Ok(Self::Actionable(input.parse()?)),
-            "input" => Ok(Self::Input(input.parse()?)),
+            "actionable" => {
+                let _: syn::Token![=] = input.parse()?;
+                Ok(Self::Actionable(input.parse()?))
+            }
+            "input" => {
+                let _: syn::Token![=] = input.parse()?;
+                Ok(Self::Input(input.parse()?))
+            }
             _ => abort!(ident, "unknown parameter"),
         }
     }
